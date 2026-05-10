@@ -1,0 +1,104 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Industri;
+
+class IndustriSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $industris = [
+            [
+                'nama_industri' => 'PT. Suka Makmur',
+                'nib' => '1234567890123',
+                'alamat' => 'Jl. Industri Raya No. 1',
+                'kelurahan' => 'Karangrejo',
+                'kecamatan' => 'Kerek',
+                'kota' => 'Tuban',
+                'provinsi' => 'Jawa Timur',
+                'kode_pos' => '62354',
+                'no_telp' => '0356-123456',
+                'email' => 'hrd@sukamakmur.co.id',
+                'website' => 'www.sukamakmur.co.id',
+                'nama_hr' => 'Bapak Hendra',
+                'no_wa_hr' => '081234567901',
+                'kategori' => 'Manufaktur',
+                'kapasitas_magang' => 50,
+            ],
+            [
+                'nama_industri' => 'PT. Teknologi Nusantara Abadi',
+                'nib' => '1234567890124',
+                'alamat' => 'Jl. Gatot Subroto No. 12',
+                'kelurahan' => 'Latsari',
+                'kecamatan' => 'Tuban',
+                'kota' => 'Tuban',
+                'provinsi' => 'Jawa Timur',
+                'kode_pos' => '62319',
+                'no_telp' => '0356-234567',
+                'email' => 'recruitment@teknusantara.co.id',
+                'website' => 'www.teknusantara.co.id',
+                'nama_hr' => 'Ibu Sari',
+                'no_wa_hr' => '081234567902',
+                'kategori' => 'IT',
+                'kapasitas_magang' => 30,
+            ],
+            [
+                'nama_industri' => 'CV. Baruna Jaya',
+                'nib' => '1234567890125',
+                'alamat' => 'Jl. Basuki Rahmat No. 45',
+                'kelurahan' => 'Doromukti',
+                'kecamatan' => 'Tuban',
+                'kota' => 'Tuban',
+                'provinsi' => 'Jawa Timur',
+                'kode_pos' => '62315',
+                'no_telp' => '0356-345678',
+                'email' => 'info@barunajaya.com',
+                'website' => 'www.barunajaya.com',
+                'nama_hr' => 'Bapak Joko',
+                'no_wa_hr' => '081234567903',
+                'kategori' => 'Otomotif',
+                'kapasitas_magang' => 40,
+            ],
+            [
+                'nama_industri' => 'PT. Bank Jatim Cabang Tuban',
+                'nib' => '1234567890126',
+                'alamat' => 'Jl. Pemuda No. 88',
+                'kelurahan' => 'Ronggomulyo',
+                'kecamatan' => 'Tuban',
+                'kota' => 'Tuban',
+                'provinsi' => 'Jawa Timur',
+                'kode_pos' => '62311',
+                'no_telp' => '0356-456789',
+                'email' => 'cabang.tuban@bankjatim.co.id',
+                'website' => 'www.bankjatim.co.id',
+                'nama_hr' => 'Ibu Wulan',
+                'no_wa_hr' => '081234567904',
+                'kategori' => 'Keuangan',
+                'kapasitas_magang' => 20,
+            ],
+            [
+                'nama_industri' => 'Hotel Tuban Graha',
+                'nib' => '1234567890127',
+                'alamat' => 'Jl. Sunan Bonang No. 99',
+                'kelurahan' => 'Penambangan',
+                'kecamatan' => 'Tuban',
+                'kota' => 'Tuban',
+                'provinsi' => 'Jawa Timur',
+                'kode_pos' => '62316',
+                'no_telp' => '0356-567890',
+                'email' => 'hr@tubangraha.com',
+                'website' => 'www.tubangraha.com',
+                'nama_hr' => 'Bapak Agus',
+                'no_wa_hr' => '081234567905',
+                'kategori' => 'Pariwisata',
+                'kapasitas_magang' => 25,
+            ],
+        ];
+
+        foreach ($industris as $industri) {
+            Industri::create($industri);
+        }
+    }
+}
