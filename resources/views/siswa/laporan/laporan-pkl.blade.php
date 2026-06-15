@@ -2,18 +2,11 @@
 
 @section('title', 'Laporan PKL')
 
-@section('content')
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Laporan PKL</h1>
-            <p class="text-sm text-gray-500 mt-1">Upload laporan PKL dalam format PDF</p>
-        </div>
-        <div class="text-sm text-gray-600">{{ tanggal_indonesia() }}</div>
-    </div>
-</header>
+@section('header_breadcrumb', 'Laporan / PKL')
+@section('header_title', 'LAPORAN PKL')
 
-<div class="p-8">
+@section('content')
+<div class="p-0">
     <!-- Alert Messages -->
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
@@ -54,293 +47,177 @@
         </div>
     @else
         <!-- Info Card -->
-        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+        <div class="bg-white/65 backdrop-blur-md border border-white/50 rounded-2xl p-6 mb-8 shadow-sm max-w-3xl mx-auto">
             <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-bold text-gray-800 mb-2">Panduan Upload Laporan PKL</h3>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>• Upload laporan PKL dalam format <strong>PDF</strong></li>
-                        <li>• Ukuran file maksimal <strong>10MB</strong></li>
-                        <li>• <strong class="text-red-600">Hanya bisa upload 1 kali</strong>, pastikan file sudah benar!</li>
-                        <li>• Laporan akan diverifikasi oleh pembimbing dan guru pamong</li>
-                        <li>• Jika perlu revisi, Anda akan mendapat notifikasi</li>
-                        <li>• Setelah disetujui, sertifikat dapat diunduh</li>
+                    <h3 class="font-bold text-gray-800 mb-2 tracking-wide text-base">Panduan Upload Laporan PKL</h3>
+                    <ul class="text-sm text-gray-600 space-y-1.5 font-semibold">
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-emerald-500">•</span> Upload laporan PKL dalam format <strong class="text-gray-850">PDF</strong>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-emerald-500">•</span> Ukuran file maksimal <strong class="text-gray-855">10MB</strong>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-red-500">•</span> <strong class="text-red-650">Hanya bisa upload 1 kali</strong>, pastikan file sudah benar!
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-emerald-500">•</span> Laporan akan diverifikasi oleh pembimbing dan guru pamong
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-emerald-500">•</span> Jika perlu revisi, Anda akan mendapat notifikasi
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="text-emerald-500">•</span> Setelah disetujui, sertifikat dapat diunduh
+                        </li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Grid Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <!-- Form Upload (Kiri) -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-8">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">📤 Upload Laporan</h2>
-                    
-                    @if($laporans->count() > 0)
-                        <!-- Sudah Upload Laporan -->
-                        <div class="text-center py-8">
-                            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                            </div>
-                            <h3 class="font-bold text-gray-800 mb-2">Laporan Sudah Diupload</h3>
-                            <p class="text-sm text-gray-500 mb-4">Anda sudah mengupload laporan PKL</p>
-                            
-                            @php
-                                $laporan = $laporans->first();
-                            @endphp
-                            
-                            <div class="bg-gray-50 rounded-xl p-4 mb-4">
-                                <p class="text-xs text-gray-500 mb-2">Status Laporan:</p>
-                                <span class="px-4 py-2 text-sm font-bold rounded-full
-                                    @if($laporan->status === 'disetujui') bg-green-100 text-green-700
-                                    @elseif($laporan->status === 'pending') bg-yellow-100 text-yellow-700
-                                    @else bg-red-100 text-red-700 @endif">
-                                    @if($laporan->status === 'disetujui')
-                                        ✅ Disetujui
-                                    @elseif($laporan->status === 'pending')
-                                        ⏳ Menunggu Verifikasi
-                                    @else
-                                        ❌ Perlu Revisi
-                                    @endif
-                                </span>
-                            </div>
-                            
-                            @if($laporan->file_path)
-                                <a href="{{ Storage::url($laporan->file_path) }}" target="_blank" 
-                                   class="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition mb-3">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                    Download Laporan
-                                </a>
-                            @endif
-                            
-                            @if($laporan->catatan_pembimbing)
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-4">
-                                    <p class="text-xs text-yellow-700 font-semibold mb-2">💬 Catatan Pembimbing:</p>
-                                    <p class="text-sm text-yellow-600">{{ $laporan->catatan_pembimbing }}</p>
-                                </div>
-                            @endif
-                            
-                            <p class="text-xs text-gray-400 mt-4">
-                                📅 Upload: {{ $laporan->created_at->format('d M Y, H:i') }} WIB
-                            </p>
-                        </div>
-                    @else
-                        <!-- Form Upload Laporan -->
-                        <form action="{{ route('siswa.laporan.pkl') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                            @csrf
-                            
-                            <!-- Judul Laporan -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    📖 Judul Laporan *
-                                </label>
-                                <input type="text" name="judul_laporan" required maxlength="255"
-                                       placeholder="Contoh: Implementasi Sistem Informasi Manajemen di PT. XYZ"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <!-- Abstrak -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    📝 Abstrak (Opsional)
-                                </label>
-                                <textarea name="abstrak" rows="4" maxlength="1000"
-                                          placeholder="Ringkasan singkat tentang laporan PKL Anda (maksimal 1000 karakter)..."
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                                <p class="text-xs text-gray-500 mt-1 text-right"><span id="abstrakCount">0</span>/1000</p>
-                            </div>
-                            
-                            <!-- File PDF -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    📄 File Laporan (PDF) *
-                                </label>
-                                <div class="border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-6 text-center hover:border-blue-500 transition">
-                                    <input type="file" name="file_path" accept=".pdf,application/pdf" required 
-                                           id="filePreview" 
-                                           class="hidden" 
-                                           onchange="previewFile(this)">
-                                    <label for="filePreview" class="cursor-pointer">
-                                        <svg class="w-16 h-16 mx-auto mb-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                        <p class="text-sm text-blue-700 font-semibold mb-1">Klik untuk upload PDF</p>
-                                        <p class="text-xs text-blue-600 mb-2">Max 10MB</p>
-                                        <p class="text-xs text-gray-500">Format: PDF only</p>
-                                    </label>
-                                    <div id="fileInfo" class="hidden mt-4 p-3 bg-white rounded-lg border border-blue-200">
-                                        <p class="text-sm text-gray-700 font-medium" id="fileName"></p>
-                                        <p class="text-xs text-gray-500" id="fileSize"></p>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-red-600 mt-2">⚠️ Pastikan file sudah benar, hanya bisa upload 1 kali!</p>
-                            </div>
-                            
-                            <!-- Submit Button -->
-                            <button type="submit" 
-                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition duration-200">
-                                📤 Upload Laporan
-                            </button>
-                            
-                            <p class="text-xs text-gray-500 text-center">
-                                Laporan akan diverifikasi oleh pembimbing dan guru pamong
-                            </p>
-                        </form>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Info & Riwayat (Kanan) -->
-            <div class="lg:col-span-2">
-                <!-- Status Progress -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">📊 Status Progress Laporan</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Step 1: Upload -->
-                        <div class="text-center p-4 rounded-xl {{ $laporans->count() > 0 ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200' }}">
-                            <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
-                                {{ $laporans->count() > 0 ? 'bg-green-500' : 'bg-gray-300' }}">
-                                @if($laporans->count() > 0)
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                @else
-                                    <span class="text-white font-bold">1</span>
-                                @endif
-                            </div>
-                            <p class="font-semibold text-gray-800">Upload Laporan</p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $laporans->count() > 0 ? 'Selesai' : 'Belum' }}</p>
-                        </div>
-                        
-                        <!-- Step 2: Verifikasi -->
-                        <div class="text-center p-4 rounded-xl {{ $laporans->count() > 0 && $laporans->first()->status !== 'pending' ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200' }}">
-                            <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
-                                {{ $laporans->count() > 0 && $laporans->first()->status !== 'pending' ? 'bg-green-500' : 'bg-gray-300' }}">
-                                @if($laporans->count() > 0 && $laporans->first()->status !== 'pending')
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                @else
-                                    <span class="text-white font-bold">2</span>
-                                @endif
-                            </div>
-                            <p class="font-semibold text-gray-800">Verifikasi</p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $laporans->count() > 0 && $laporans->first()->status !== 'pending' ? 'Selesai' : 'Pending' }}</p>
-                        </div>
-                        
-                        <!-- Step 3: Sertifikat -->
-                        <div class="text-center p-4 rounded-xl {{ $laporans->count() > 0 && $laporans->first()->status === 'disetujui' ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200' }}">
-                            <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
-                                {{ $laporans->count() > 0 && $laporans->first()->status === 'disetujui' ? 'bg-green-500' : 'bg-gray-300' }}">
-                                @if($laporans->count() > 0 && $laporans->first()->status === 'disetujui')
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                                    </svg>
-                                @else
-                                    <span class="text-white font-bold">3</span>
-                                @endif
-                            </div>
-                            <p class="font-semibold text-gray-800">Sertifikat</p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $laporans->count() > 0 && $laporans->first()->status === 'disetujui' ? 'Tersedia' : 'Terkunci' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Riwayat Upload -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">📁 Riwayat Upload</h2>
-
-                    @if($laporans->count() > 0)
-                        <div class="space-y-4">
-                            @foreach($laporans as $laporan)
-                                <div class="border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
-                                    <div class="flex items-start justify-between mb-4">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 class="font-bold text-gray-800">{{ $laporan->judul_laporan }}</h3>
-                                                <p class="text-sm text-gray-500">
-                                                    📅 Upload: {{ $laporan->created_at->format('d M Y, H:i') }} WIB
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <span class="px-4 py-2 text-sm font-bold rounded-full
-                                            @if($laporan->status === 'disetujui') bg-green-100 text-green-700
-                                            @elseif($laporan->status === 'pending') bg-yellow-100 text-yellow-700
-                                            @else bg-red-100 text-red-700 @endif">
-                                            @if($laporan->status === 'disetujui')
-                                                ✅ Disetujui
-                                            @elseif($laporan->status === 'pending')
-                                                ⏳ Pending
-                                            @else
-                                                ❌ Perlu Revisi
-                                            @endif
-                                        </span>
-                                    </div>
-                                    
-                                    @if($laporan->abstrak)
-                                        <div class="bg-gray-50 rounded-xl p-4 mb-4">
-                                            <p class="text-xs text-gray-500 font-semibold mb-2">📝 Abstrak:</p>
-                                            <p class="text-sm text-gray-700">{{ Str::limit($laporan->abstrak, 200) }}</p>
-                                        </div>
-                                    @endif
-                                    
-                                    @if($laporan->catatan_pembimbing)
-                                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-                                            <p class="text-xs text-yellow-700 font-semibold mb-2">💬 Catatan Pembimbing:</p>
-                                            <p class="text-sm text-yellow-600">{{ $laporan->catatan_pembimbing }}</p>
-                                        </div>
-                                    @endif
-                                    
-                                    <div class="flex items-center gap-4">
-                                        @if($laporan->file_path)
-                                            <a href="{{ Storage::url($laporan->file_path) }}" target="_blank" 
-                                               class="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
-                                                Download PDF
-                                            </a>
-                                        @endif
-                                        
-                                        @if($laporan->status === 'disetujui')
-                                            <a href="{{ route('siswa.download.sertifikat') }}" 
-                                               class="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                                                </svg>
-                                                Download Sertifikat
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-12">
-                            <svg class="w-20 h-20 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Single Column Layout centered -->
+        <div class="max-w-3xl mx-auto mb-8">
+            <div class="bg-white/65 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <span class="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </span>
+                    Upload Laporan
+                </h2>
+                
+                @if($laporans->count() > 0 && $laporans->first()->status !== 'perlu_revisi')
+                    <!-- Sudah Upload Laporan -->
+                    <div class="text-center py-6">
+                        <div class="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md shadow-emerald-500/10 text-white">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            <p class="text-gray-500 font-medium">Belum ada laporan yang diupload</p>
-                            <p class="text-sm text-gray-400 mt-2">Silakan upload laporan PKL Anda</p>
+                        </div>
+                        <h3 class="font-bold text-gray-800 mb-1">Laporan Sudah Diupload</h3>
+                        <p class="text-xs text-gray-500 mb-6">Anda sudah mengupload laporan PKL</p>
+                        
+                        @php
+                            $laporan = $laporans->first();
+                        @endphp
+                        
+                        <div class="bg-gray-50/80 border border-gray-150 rounded-xl p-4 mb-5 max-w-md mx-auto">
+                            <p class="text-xs text-gray-400 font-bold tracking-wide uppercase mb-2">Status Laporan</p>
+                            <span class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-full
+                                @if($laporan->status === 'disetujui') bg-green-50 text-green-700
+                                @elseif($laporan->status === 'pending') bg-yellow-50 text-yellow-755
+                                @else bg-red-50 text-red-700 @endif">
+                                @if($laporan->status === 'disetujui')
+                                    ✅ Berhasil (Disetujui)
+                                @elseif($laporan->status === 'pending')
+                                    ⏳ Menunggu Verifikasi
+                                @else
+                                    ❌ Gagal (Perlu Revisi)
+                                @endif
+                            </span>
+                        </div>
+                        
+                        @if($laporan->file_path)
+                            <a href="{{ Storage::url($laporan->file_path) }}" target="_blank" 
+                               class="inline-flex items-center justify-center gap-2 max-w-md w-full px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-md shadow-emerald-500/10 transition duration-200 mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Download Laporan
+                            </a>
+                        @endif
+                        
+                        @if($laporan->catatan_pembimbing)
+                            <div class="bg-yellow-50 border border-yellow-150 rounded-xl p-4 mt-4 text-left max-w-md mx-auto">
+                                <p class="text-xs text-yellow-800 font-bold mb-1 flex items-center gap-1">
+                                    💬 Catatan Pembimbing:
+                                </p>
+                                <p class="text-xs text-yellow-750 leading-relaxed font-semibold">{{ $laporan->catatan_pembimbing }}</p>
+                            </div>
+                        @endif
+                        
+                        <p class="text-[10px] text-gray-400 mt-5 font-semibold">
+                            📅 Upload: {{ $laporan->created_at->format('d M Y, H:i') }} WIB
+                        </p>
+                    </div>
+                @else
+                    @if($laporans->count() > 0 && $laporans->first()->status === 'perlu_revisi')
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 text-left">
+                            <p class="text-sm text-red-800 font-bold mb-2 flex items-center gap-1">
+                                ❌ Laporan Anda Perlu Revisi!
+                            </p>
+                            <p class="text-sm text-red-700 font-semibold mb-2">Catatan Pembimbing: {{ $laporans->first()->catatan_pembimbing }}</p>
+                            <p class="text-xs text-red-600 mt-2 italic">Silakan perbaiki laporan Anda dan upload ulang formulir di bawah ini.</p>
                         </div>
                     @endif
-                </div>
+                    <!-- Form Upload Laporan -->
+                    <form action="{{ route('siswa.laporan.pkl') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        @csrf
+                        
+                        <!-- Judul Laporan -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                📖 Judul Laporan <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="judul_laporan" required maxlength="255"
+                                   placeholder="Contoh: Implementasi Sistem Informasi Manajemen di PT. XYZ"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 outline-none transition duration-200 text-sm">
+                        </div>
+                        
+                        <!-- Abstrak -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                📝 Abstrak (Opsional)
+                            </label>
+                            <textarea name="abstrak" rows="4" maxlength="1000"
+                                      placeholder="Ringkasan singkat tentang laporan PKL Anda..."
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 outline-none resize-none transition duration-200 text-sm"></textarea>
+                            <p class="text-[10px] text-gray-400 mt-1 text-right font-semibold"><span id="abstrakCount">0</span>/1000</p>
+                        </div>
+                        
+                        <!-- File PDF -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                📄 File Laporan (PDF) <span class="text-red-500">*</span>
+                            </label>
+                            <div class="border-2 border-dashed border-emerald-200 bg-emerald-50/20 rounded-2xl p-6 text-center hover:border-emerald-400 transition duration-200 group">
+                                <input type="file" name="file_path" accept=".pdf,application/pdf" required 
+                                       id="filePreview" 
+                                       class="hidden" 
+                                       onchange="previewFile(this)">
+                                <label for="filePreview" class="cursor-pointer block">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-emerald-450 group-hover:scale-105 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                    </svg>
+                                    <p class="text-xs text-emerald-700 font-bold mb-1">Klik untuk upload PDF</p>
+                                    <p class="text-[10px] text-emerald-500/80 mb-2">Maksimal 10MB</p>
+                                    <p class="text-[9px] text-gray-400">Format: PDF only</p>
+                                </label>
+                                <div id="fileInfo" class="hidden mt-4 p-3 bg-white rounded-xl border border-emerald-100 shadow-sm text-left">
+                                    <p class="text-xs text-gray-800 font-bold truncate" id="fileName"></p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5" id="fileSize"></p>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-red-650 font-bold mt-2.5">⚠️ Pastikan file sudah benar, hanya bisa upload 1 kali!</p>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-emerald-500/10 transition duration-200 text-sm">
+                            📤 Upload Laporan
+                        </button>
+                        
+                        <p class="text-[10px] text-gray-500 text-center font-medium">
+                            Laporan akan diverifikasi oleh pembimbing & pamong
+                        </p>
+                    </form>
+                @endif
             </div>
         </div>
     @endif

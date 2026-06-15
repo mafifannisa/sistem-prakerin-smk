@@ -2,23 +2,20 @@
 
 @section('title', 'Data Surat Masuk (Balasan Industri)')
 
-@section('content')
-<!-- Top Header -->
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Surat Masuk</h1>
-            <p class="text-sm text-gray-500 mt-1">Dokumentasi balasan pengajuan magang dari DU/DI</p>
-        </div>
-        <button onclick="document.getElementById('modal-tambah').classList.remove('hidden')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Tambah Surat Masuk
-        </button>
-    </div>
-</header>
+@section('header_breadcrumb', 'Surat Masuk')
+@section('header_title', 'SURAT MASUK')
 
-<!-- Main Content -->
-<div class="p-8">
+@section('header_actions')
+<div class="flex justify-end">
+    <button onclick="document.getElementById('modal-tambah').classList.remove('hidden')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Tambah Surat Masuk
+    </button>
+</div>
+@endsection
+
+@section('content')
+<div class="p-0">
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 text-green-700 flex items-center gap-3">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>

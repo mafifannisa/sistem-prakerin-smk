@@ -14,6 +14,14 @@ class Nilai extends Model
         'nilai_sikap',
         'nilai_keterampilan',
         'nilai_pengetahuan',
+        'kegiatan_1',
+        'nilai_1',
+        'kegiatan_2',
+        'nilai_2',
+        'kegiatan_3',
+        'nilai_3',
+        'foto_nilai',
+        'nilai_penguji',
         'nilai_akhir',
         'predikat',
         'catatan_penguji',
@@ -25,8 +33,12 @@ class Nilai extends Model
         'nilai_sikap' => 'decimal:2',
         'nilai_keterampilan' => 'decimal:2',
         'nilai_pengetahuan' => 'decimal:2',
+        'nilai_penguji' => 'decimal:2',
+        'nilai_1' => 'decimal:2',
+        'nilai_2' => 'decimal:2',
+        'nilai_3' => 'decimal:2',
         'nilai_akhir' => 'decimal:2',
-        'tanggal_input' => 'date',
+        'tanggal_input' => 'datetime',
     ];
 
     // Relasi: Punya 1 penempatan_magang

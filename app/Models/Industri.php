@@ -23,6 +23,7 @@ class Industri extends Model
         'website',
         'nama_hr',
         'no_wa_hr',
+        'pembimbing_magang',
         'kategori',
         'kapasitas_magang',
         'is_active',

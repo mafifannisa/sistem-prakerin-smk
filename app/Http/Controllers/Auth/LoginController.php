@@ -24,52 +24,46 @@ class LoginController extends Controller
         $request->validate([
             'identity' => 'required',
             'password' => 'required',
-            'role' => 'required|in:admin,siswa,pimpinan',
         ]);
 
         $identity = $request->identity;
         $password = $request->password;
-        $role = $request->role;
 
-        // Login untuk Admin/Pimpinan
-        if ($role === 'admin' || $role === 'pimpinan') {
-            $user = User::where('username', $identity)->where('role', $role)->first();
-            
-            if ($user && Hash::check($password, $user->password)) {
-                if (!$user->is_active) {
-                    return back()->withErrors([
-                        'identity' => 'Akun Anda tidak aktif. Hubungi administrator.',
-                    ]);
-                }
-                
-                Auth::login($user);
-                $request->session()->regenerate();
-                
-                return redirect()->intended($this->getRedirectUrl($user->role));
+        // 1. Login untuk Admin, Pimpinan, Guru Pembimbing, Kepala Jurusan, Guru Penguji
+        $user = User::where('username', $identity)->first();
+        
+        if ($user && Hash::check($password, $user->password)) {
+            if (!$user->is_active) {
+                return back()->withErrors([
+                    'identity' => 'Akun Anda tidak aktif. Hubungi administrator.',
+                ]);
             }
+            
+            Auth::login($user);
+            $request->session()->regenerate();
+            
+            return redirect()->intended($this->getRedirectUrl($user->role));
         }
         
-        // Login untuk Siswa (pakai NISN)
-        if ($role === 'siswa') {
-            $siswa = Siswa::with('jurusan')->where('nisn', $identity)->first();
-            
-            if ($siswa && Hash::check($password, $siswa->password)) {
-                if (!$siswa->is_active) {
-                    return back()->withErrors([
-                        'identity' => 'Akun Anda tidak aktif. Hubungi administrator.',
-                    ]);
-                }
-                
-                // Simpan data siswa di session
-                session([
-                    'siswa_id' => $siswa->id,
-                    'siswa_nisn' => $siswa->nisn,
-                    'siswa_nama' => $siswa->nama,
-                    'siswa_jurusan' => $siswa->jurusan->nama_jurusan ?? '',
+        // 2. Login untuk Siswa (pakai NISN)
+        $siswa = Siswa::with('jurusan')->where('nisn', $identity)->first();
+        
+        if ($siswa && Hash::check($password, $siswa->password)) {
+            if (!$siswa->is_active) {
+                return back()->withErrors([
+                    'identity' => 'Akun Anda tidak aktif. Hubungi administrator.',
                 ]);
-                
-                return redirect()->intended('/siswa/dashboard');
             }
+            
+            // Simpan data siswa di session
+            session([
+                'siswa_id' => $siswa->id,
+                'siswa_nisn' => $siswa->nisn,
+                'siswa_nama' => $siswa->nama,
+                'siswa_jurusan' => $siswa->jurusan->nama_jurusan ?? '',
+            ]);
+            
+            return redirect()->intended('/siswa/dashboard');
         }
 
         // Login gagal
@@ -86,6 +80,12 @@ class LoginController extends Controller
                 return '/admin/dashboard';
             case 'pimpinan':
                 return '/pimpinan/dashboard';
+            case 'guru_pembimbing':
+                return '/guru-pembimbing/dashboard';
+            case 'kepala_jurusan':
+                return '/kepala-jurusan/dashboard';
+            case 'guru_penguji':
+                return '/guru-penguji/dashboard';
             default:
                 return '/home';
         }

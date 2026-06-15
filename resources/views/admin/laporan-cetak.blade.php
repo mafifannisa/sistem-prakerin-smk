@@ -2,15 +2,11 @@
 
 @section('title', 'Laporan & Cetak')
 
-@section('content')
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-800">Laporan & Cetak Rekap</h1>
-        <p class="text-sm text-gray-500 mt-1">Unduh rekapitulasi data siswa magang dan nilai berdasarkan industri atau jurusan.</p>
-    </div>
-</header>
+@section('header_breadcrumb', 'Laporan & Cetak')
+@section('header_title', 'LAPORAN & CETAK REKAP')
 
-<div class="p-6 md:p-8 space-y-10">
+@section('content')
+<div class="p-0 space-y-10">
     {{-- Form Cetak --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Per Industri -->

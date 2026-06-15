@@ -14,6 +14,7 @@ class PenempatanMagang extends Model
     protected $fillable = [
         'siswa_id',
         'industri_id',
+        'periode_magang_id',
         'tahun_ajaran',
         'semester',
         'tanggal_mulai',
@@ -25,6 +26,8 @@ class PenempatanMagang extends Model
         'catatan_industri',
         'tanggal_approval',
         'approved_by',
+        'guru_pembimbing_id',
+        'guru_penguji_id',
     ];
 
     protected $casts = [
@@ -32,6 +35,18 @@ class PenempatanMagang extends Model
         'tanggal_selesai' => 'datetime',
         'tanggal_approval' => 'date',
     ];
+
+    // Relasi: Punya 1 guru pembimbing (User)
+    public function guruPembimbing()
+    {
+        return $this->belongsTo(User::class, 'guru_pembimbing_id');
+    }
+
+    // Relasi: Punya 1 guru penguji (User)
+    public function guruPenguji()
+    {
+        return $this->belongsTo(User::class, 'guru_penguji_id');
+    }
 
     // Relasi: Punya 1 siswa
     public function siswa()
@@ -63,6 +78,12 @@ class PenempatanMagang extends Model
         return $this->hasMany(SuratMasuk::class);
     }
 
+    // Relasi: Punya 1 periode magang
+    public function periodeMagang()
+    {
+        return $this->belongsTo(PeriodeMagang::class, 'periode_magang_id');
+    }
+
     // Relasi: Punya 1 nilai
     public function nilai()
     {
@@ -73,6 +94,18 @@ class PenempatanMagang extends Model
     public function sertifikat()
     {
         return $this->hasOne(Sertifikat::class);
+    }
+
+    // Relasi: Punya banyak laporan_pkl
+    public function laporanPkls()
+    {
+        return $this->hasMany(LaporanPKL::class);
+    }
+
+    // Relasi: Punya 1 laporan_pkl
+    public function laporanPkl()
+    {
+        return $this->hasOne(LaporanPKL::class);
     }
 
     // Scope: Berdasarkan status

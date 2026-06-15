@@ -17,7 +17,7 @@ class Siswa extends Model
         'tempat_lahir',
         'tanggal_lahir',
         'jurusan_id',
-        'kelas',
+        'kelas_id',
         'no_wa',
         'email',
         'alamat',
@@ -35,6 +35,12 @@ class Siswa extends Model
         'tanggal_lahir' => 'date',
         'is_active' => 'boolean',
     ];
+
+    // Relasi: Siswa punya 1 kelas
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
 
     // Relasi: Siswa punya 1 jurusan
     public function jurusan()

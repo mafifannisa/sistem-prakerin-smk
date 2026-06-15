@@ -55,6 +55,16 @@ class SiswaImport implements ToCollection, WithHeadingRow
             // Konversi tanggal lahir
             $tanggalLahir = $this->transformDate($row['tanggal_lahir'] ?? null);
 
+            // Cari/buat kelas berdasarkan nama_kelas
+            $kelasId = null;
+            if (!empty($row['kelas'])) {
+                $namaKelas = trim($row['kelas']);
+                $kelas = \App\Models\Kelas::firstOrCreate([
+                    'nama_kelas' => $namaKelas
+                ]);
+                $kelasId = $kelas->id;
+            }
+
             // Simpan siswa
             Siswa::create([
                 'nisn'          => $nisn,
@@ -62,7 +72,7 @@ class SiswaImport implements ToCollection, WithHeadingRow
                 'tempat_lahir'  => $row['tempat_lahir'] ?? null,
                 'tanggal_lahir' => $tanggalLahir,
                 'jurusan_id'    => $jurusanId,
-                'kelas'         => $row['kelas'] ?? null,
+                'kelas_id'      => $kelasId,
                 'no_wa'         => $row['no_wa'] ?? '-',
                 'email'         => $email,
                 'alamat'        => $row['alamat'] ?? null,

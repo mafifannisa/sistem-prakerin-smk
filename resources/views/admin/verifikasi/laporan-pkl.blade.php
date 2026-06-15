@@ -2,15 +2,11 @@
 
 @section('title', 'Verifikasi Laporan PKL')
 
-@section('content')
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-800">Verifikasi Laporan PKL</h1>
-        <p class="text-sm text-gray-500 mt-1">Periksa, beri catatan, dan setujui laporan PKL siswa. Riwayat tetap tercatat.</p>
-    </div>
-</header>
+@section('header_breadcrumb', 'Verifikasi')
+@section('header_title', 'VERIFIKASI LAPORAN PKL')
 
-<div class="p-8">
+@section('content')
+<div class="p-0">
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>

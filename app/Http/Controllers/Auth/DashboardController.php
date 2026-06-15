@@ -168,7 +168,7 @@ class DashboardController extends Controller
     // ==================== DATA SISWA ====================
     public function dataSiswa(Request $request)
     {
-        $query = \App\Models\Siswa::with('jurusan');
+        $query = \App\Models\Siswa::with(['jurusan', 'kelas']);
         
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -184,8 +184,9 @@ class DashboardController extends Controller
         
         $siswas = $query->latest()->paginate(10);
         $jurusans = \App\Models\Jurusan::all();
+        $kelas = \App\Models\Kelas::all();
         
-        return view('admin.data-siswa', compact('siswas', 'jurusans'));
+        return view('admin.data-siswa', compact('siswas', 'jurusans', 'kelas'));
     }
 
     public function storeSiswa(Request $request)
@@ -194,7 +195,7 @@ class DashboardController extends Controller
             'nama' => 'required|string|max:255',
             'nisn' => 'required|string|unique:siswas,nisn',
             'jurusan_id' => 'required|exists:jurusans,id',
-            'kelas' => 'required|string|max:50',
+            'kelas_id' => 'required|exists:kelas,id',
             'email' => 'required|email|unique:siswas,email',
             'no_wa' => 'required|string',
             'tempat_lahir' => 'nullable|string|max:255',
@@ -224,7 +225,7 @@ class DashboardController extends Controller
             'nama' => 'required|string|max:255',
             'nisn' => 'required|string|unique:siswas,nisn,' . $id,
             'jurusan_id' => 'required|exists:jurusans,id',
-            'kelas' => 'required|string|max:50',
+            'kelas_id' => 'required|exists:kelas,id',
             'email' => 'required|email|unique:siswas,email,' . $id,
             'no_wa' => 'required|string',
             'password' => 'nullable|string|min:4',
@@ -397,6 +398,7 @@ class DashboardController extends Controller
             'website' => 'nullable|string',
             'nama_hr' => 'nullable|string|max:255',
             'no_wa_hr' => 'nullable|string',
+            'pembimbing_magang' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:100',
             'kapasitas_magang' => 'nullable|integer',
         ]);
@@ -424,6 +426,7 @@ class DashboardController extends Controller
             'website' => 'nullable|string',
             'nama_hr' => 'nullable|string|max:255',
             'no_wa_hr' => 'nullable|string',
+            'pembimbing_magang' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:100',
             'kapasitas_magang' => 'nullable|integer',
         ]);
@@ -502,16 +505,7 @@ class DashboardController extends Controller
     // ==================== DATA SURAT ====================
     public function viewDataSurat()
     {
-        $pengajuans = \App\Models\PenempatanMagang::with([
-            'siswa', 
-            'siswa.jurusan',
-            'industri',
-            'suratKeluar' 
-        ])
-        ->latest()
-        ->paginate(10);
-
-        return view('admin.data-surat', compact('pengajuans'));
+        return view('admin.data-surat');
     }
 
     public function downloadSuratAdmin($id)
@@ -615,12 +609,74 @@ class DashboardController extends Controller
     public function viewGenerateSertifikat()
     {
         $pengajuans = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai', 'sertifikat'])
-            ->whereIn('status', ['approved', 'completed'])
-            ->whereHas('nilai')
+            ->whereIn('status', ['approved', 'completed', 'ongoing'])
+            ->whereHas('nilai', function($q) {
+                $q->whereNotNull('nilai_sikap')
+                  ->whereNotNull('nilai_keterampilan')
+                  ->whereNotNull('nilai_pengetahuan')
+                  ->whereNotNull('kegiatan_1')
+                  ->whereNotNull('nilai_1')
+                  ->whereNotNull('kegiatan_2')
+                  ->whereNotNull('nilai_2')
+                  ->whereNotNull('kegiatan_3')
+                  ->whereNotNull('nilai_3')
+                  ->whereNotNull('nilai_penguji');
+            })
             ->latest()
             ->paginate(15);
+
+        $borders = \App\Models\BorderTemplate::all();
             
-        return view('admin.generate-sertifikat', compact('pengajuans'));
+        return view('admin.generate-sertifikat', compact('pengajuans', 'borders'));
+    }
+
+    public function uploadBorderTemplate(Request $request)
+    {
+        $request->validate([
+            'border_image' => 'required|image|mimes:png,jpg,jpeg|max:5120',
+            'border_name' => 'nullable|string|max:255'
+        ]);
+
+        if ($request->hasFile('border_image')) {
+            $file = $request->file('border_image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/borders'), $filename);
+            $imagePath = 'uploads/borders/' . $filename;
+
+            $border = \App\Models\BorderTemplate::create([
+                'name' => $request->border_name ?? 'Border ' . ( \App\Models\BorderTemplate::count() + 1 ),
+                'image_path' => $imagePath
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template border berhasil diunggah.',
+                'border' => $border
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengunggah file.'
+        ], 400);
+    }
+
+    public function deleteBorderTemplate($id)
+    {
+        $border = \App\Models\BorderTemplate::findOrFail($id);
+        
+        // Hapus file fisik
+        $filePath = public_path($border->image_path);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        $border->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Template border berhasil dihapus.'
+        ]);
     }
 
     public function importNilai(Request $request)
@@ -641,11 +697,31 @@ class DashboardController extends Controller
     {
         $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai'])->findOrFail($id);
         
-        if (!$penempatan->nilai) {
-            return redirect()->back()->with('error', 'Siswa belum memiliki nilai, tidak dapat mencetak sertifikat.');
+        if (!$penempatan->nilai || 
+            is_null($penempatan->nilai->nilai_sikap) ||
+            is_null($penempatan->nilai->nilai_keterampilan) ||
+            is_null($penempatan->nilai->nilai_pengetahuan) ||
+            is_null($penempatan->nilai->kegiatan_1) ||
+            is_null($penempatan->nilai->nilai_1) ||
+            is_null($penempatan->nilai->kegiatan_2) ||
+            is_null($penempatan->nilai->nilai_2) ||
+            is_null($penempatan->nilai->kegiatan_3) ||
+            is_null($penempatan->nilai->nilai_3) ||
+            is_null($penempatan->nilai->nilai_penguji)
+        ) {
+            return redirect()->back()->with('error', 'Siswa belum memiliki nilai yang lengkap, tidak dapat mencetak sertifikat.');
         }
 
-        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan'));
+        $borderPath = null;
+        $borderSide = request()->input('border_side', 'depan');
+        if (request()->has('border_id') && request()->input('border_id') != '') {
+            $borderTemplate = \App\Models\BorderTemplate::find(request()->input('border_id'));
+            if ($borderTemplate) {
+                $borderPath = public_path($borderTemplate->image_path);
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan', 'borderPath', 'borderSide'));
         $pdf->setPaper('A4', 'landscape');
         
         $filename = 'Sertifikat_' . str_replace(' ', '_', $penempatan->siswa->nama) . '_' . date('YmdHis') . '.pdf';
@@ -850,60 +926,7 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Pengajuan berhasil diverifikasi & diteruskan ke Pimpinan.');
     }
 
-    public function startMagang(Request $request, $id)
-    {
-        $request->validate([
-            'tanggal_mulai' => 'required'
-        ]);
 
-        $penempatan = \App\Models\PenempatanMagang::findOrFail($id);
-        $tglMulai = \Carbon\Carbon::parse($request->tanggal_mulai);
-
-        // Jika waktu yang diset sudah lewat/sekarang, langsung mulai
-        if ($tglMulai->isPast()) {
-            $penempatan->update([
-                'status' => 'ongoing',
-                'tanggal_mulai' => $tglMulai
-            ]);
-            $pesan = 'Waktu telah tiba, Magang telah DIMULAI secara resmi.';
-        } else {
-            // Jika waktu masih di masa depan, hanya simpan tanggalnya saja
-            $penempatan->update([
-                'tanggal_mulai' => $tglMulai
-            ]);
-            $pesan = 'Jadwal mulai berhasil diatur. Sistem akan otomatis memulai saat waktunya tiba.';
-        }
-
-        return redirect()->back()->with('success', $pesan);
-    }
-
-    public function endMagang(Request $request, $id)
-    {
-        $request->validate([
-            'tanggal_selesai' => 'required'
-        ]);
-
-        $penempatan = \App\Models\PenempatanMagang::findOrFail($id);
-        $tglSelesai = \Carbon\Carbon::parse($request->tanggal_selesai);
-
-        // Jika waktu yang diset sudah lewat/sekarang, langsung selesaikan
-        if ($tglSelesai->isPast()) {
-            $penempatan->update([
-                'status' => 'completed',
-                'tanggal_selesai' => $tglSelesai
-            ]);
-            $pesan = 'Waktu telah tiba, Magang telah otomatis DIAKHIRI/SELESAI.';
-        } else {
-            // FIX: Paksa kembalikan status ke 'ongoing' karena waktunya masih di masa depan
-            $penempatan->update([
-                'status' => 'ongoing',
-                'tanggal_selesai' => $tglSelesai
-            ]);
-            $pesan = 'Jadwal selesai berhasil diatur. Sistem akan otomatis mengakhiri saat waktunya tiba.';
-        }
-
-        return redirect()->back()->with('success', $pesan);
-    }
 
     public function adminReject(Request $request, $id)
     {
@@ -929,29 +952,7 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Pengajuan ditolak.');
     }
 
-    // ==================== KONTROL MAGANG ====================
-    public function kontrolMagangView()
-    {
-        // --- SENSOR OTOMATIS: Berjalan setiap kali halaman direfresh ---
-        \App\Models\PenempatanMagang::where('status', 'approved')
-            ->whereNotNull('tanggal_mulai')
-            ->where('tanggal_mulai', '<=', now())
-            ->update(['status' => 'ongoing']);
-            
-        \App\Models\PenempatanMagang::where('status', 'ongoing')
-            ->whereNotNull('tanggal_selesai')
-            ->where('tanggal_selesai', '<=', now())
-            ->update(['status' => 'completed']);
-        // ---------------------------------------------------------------
 
-        // Hanya tampilkan siswa yang sudah disetujui (approved), sedang magang (ongoing), atau selesai (completed)
-        $penempatans = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri'])
-            ->whereIn('status', ['approved', 'ongoing', 'completed'])
-            ->latest()
-            ->paginate(15);
-            
-        return view('admin.kontrol-magang', compact('penempatans'));
-    }
 
     // ==================== PIMPINAN DASHBOARD ====================
     public function pimpinanDashboard(Request $request)
@@ -1463,18 +1464,7 @@ class DashboardController extends Controller
     // ==================== SISWA DASHBOARD ====================
     public function siswaDashboard()
     {
-        // --- SENSOR OTOMATIS: Update Status Waktu Magang ---
-        \App\Models\PenempatanMagang::where('status', 'approved')
-            ->whereNotNull('tanggal_mulai')
-            ->where('tanggal_mulai', '<=', now())
-            ->update(['status' => 'ongoing']);
-            
-        \App\Models\PenempatanMagang::where('status', 'ongoing')
-            ->whereNotNull('tanggal_selesai')
-            ->where('tanggal_selesai', '<=', now())
-            ->update(['status' => 'completed']);
-        // ----------------------------------------------------
-    
+
         $siswaId = session('siswa_id');
         $siswa = Siswa::with(['jurusan', 'penempatanMagangs.industri'])->find($siswaId);
         
@@ -1483,6 +1473,27 @@ class DashboardController extends Controller
         }
         
         $penempatan = $siswa->penempatanMagangs->first();
+
+        if ($penempatan) {
+            $today = now()->startOfDay();
+            $startDate = \Carbon\Carbon::parse($penempatan->tanggal_mulai)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($penempatan->tanggal_selesai)->startOfDay();
+
+            if (in_array($penempatan->status, ['pending', 'verified'])) {
+                $penempatan->update(['status' => 'approved']);
+                $penempatan->status = 'approved';
+            }
+
+            if ($penempatan->status === 'approved' && $today->gte($startDate)) {
+                $penempatan->update(['status' => 'ongoing']);
+                $penempatan->status = 'ongoing';
+            }
+
+            if ($penempatan->status === 'ongoing' && $today->gte($endDate)) {
+                $penempatan->update(['status' => 'completed']);
+                $penempatan->status = 'completed';
+            }
+        }
 
         $pengumumans = \App\Models\Pengumuman::where('is_active', 1)->latest()->take(5)->get();
         
@@ -1676,6 +1687,27 @@ class DashboardController extends Controller
             ->where('siswa_id', $siswaId)
             ->latest()
             ->first();
+
+        if ($penempatan) {
+            $today = now()->startOfDay();
+            $startDate = \Carbon\Carbon::parse($penempatan->tanggal_mulai)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($penempatan->tanggal_selesai)->startOfDay();
+
+            if (in_array($penempatan->status, ['pending', 'verified'])) {
+                $penempatan->update(['status' => 'approved']);
+                $penempatan->status = 'approved';
+            }
+
+            if ($penempatan->status === 'approved' && $today->gte($startDate)) {
+                $penempatan->update(['status' => 'ongoing']);
+                $penempatan->status = 'ongoing';
+            }
+
+            if ($penempatan->status === 'ongoing' && $today->gte($endDate)) {
+                $penempatan->update(['status' => 'completed']);
+                $penempatan->status = 'completed';
+            }
+        }
         
         // Logika Kalender agar pengecekan kuota akurat
         $now = now();
@@ -2040,15 +2072,35 @@ class DashboardController extends Controller
     public function generateSertifikatBatch()
     {
         $pengajuans = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai'])
-            ->whereIn('status', ['approved', 'completed'])
-            ->whereHas('nilai')
+            ->whereIn('status', ['approved', 'completed', 'ongoing'])
+            ->whereHas('nilai', function($q) {
+                $q->whereNotNull('nilai_sikap')
+                  ->whereNotNull('nilai_keterampilan')
+                  ->whereNotNull('nilai_pengetahuan')
+                  ->whereNotNull('kegiatan_1')
+                  ->whereNotNull('nilai_1')
+                  ->whereNotNull('kegiatan_2')
+                  ->whereNotNull('nilai_2')
+                  ->whereNotNull('kegiatan_3')
+                  ->whereNotNull('nilai_3')
+                  ->whereNotNull('nilai_penguji');
+            })
             ->get();
 
         if ($pengajuans->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data siswa yang siap dicetak sertifikatnya.');
         }
 
-        $pdf = Pdf::loadView('pdf.sertifikat-batch', compact('pengajuans'));
+        $borderPath = null;
+        $borderSide = request()->input('border_side', 'depan');
+        if (request()->has('border_id') && request()->input('border_id') != '') {
+            $borderTemplate = \App\Models\BorderTemplate::find(request()->input('border_id'));
+            if ($borderTemplate) {
+                $borderPath = public_path($borderTemplate->image_path);
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.sertifikat-batch', compact('pengajuans', 'borderPath', 'borderSide'));
         $pdf->setPaper('A4', 'landscape');
         return $pdf->download('Batch_Sertifikat_Magang_' . date('YmdHis') . '.pdf');
     }
@@ -2056,11 +2108,32 @@ class DashboardController extends Controller
     public function kirimSertifikat($id)
     {
         $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai'])->findOrFail($id);
-        if (!$penempatan->nilai) {
-            return redirect()->back()->with('error', 'Siswa belum memiliki nilai.');
+        
+        if (!$penempatan->nilai || 
+            is_null($penempatan->nilai->nilai_sikap) ||
+            is_null($penempatan->nilai->nilai_keterampilan) ||
+            is_null($penempatan->nilai->nilai_pengetahuan) ||
+            is_null($penempatan->nilai->kegiatan_1) ||
+            is_null($penempatan->nilai->nilai_1) ||
+            is_null($penempatan->nilai->kegiatan_2) ||
+            is_null($penempatan->nilai->nilai_2) ||
+            is_null($penempatan->nilai->kegiatan_3) ||
+            is_null($penempatan->nilai->nilai_3) ||
+            is_null($penempatan->nilai->nilai_penguji)
+        ) {
+            return redirect()->back()->with('error', 'Siswa belum memiliki nilai yang lengkap.');
         }
 
-        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan'));
+        $borderPath = null;
+        $borderSide = request()->input('border_side', 'depan');
+        if (request()->has('border_id') && request()->input('border_id') != '') {
+            $borderTemplate = \App\Models\BorderTemplate::find(request()->input('border_id'));
+            if ($borderTemplate) {
+                $borderPath = public_path($borderTemplate->image_path);
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan', 'borderPath', 'borderSide'));
         $pdf->setPaper('A4', 'landscape');
         
         $filename = 'Sertifikat_' . str_replace(' ', '_', $penempatan->siswa->nama) . '_' . date('YmdHis') . '.pdf';
@@ -2102,10 +2175,31 @@ class DashboardController extends Controller
 
         $pengajuans = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai'])
             ->whereIn('id', $ids)
+            ->whereHas('nilai', function($q) {
+                $q->whereNotNull('nilai_sikap')
+                  ->whereNotNull('nilai_keterampilan')
+                  ->whereNotNull('nilai_pengetahuan')
+                  ->whereNotNull('kegiatan_1')
+                  ->whereNotNull('nilai_1')
+                  ->whereNotNull('kegiatan_2')
+                  ->whereNotNull('nilai_2')
+                  ->whereNotNull('kegiatan_3')
+                  ->whereNotNull('nilai_3')
+                  ->whereNotNull('nilai_penguji');
+            })
             ->get();
 
         if ($pengajuans->isEmpty()) {
             return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $borderPath = null;
+        $borderSide = $request->input('border_side', 'depan');
+        if ($request->has('border_id') && $request->input('border_id') != '') {
+            $borderTemplate = \App\Models\BorderTemplate::find($request->input('border_id'));
+            if ($borderTemplate) {
+                $borderPath = public_path($borderTemplate->image_path);
+            }
         }
 
         $zip = new \ZipArchive();
@@ -2115,11 +2209,31 @@ class DashboardController extends Controller
         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
             foreach ($pengajuans as $penempatan) {
                 if (!$penempatan->nilai) continue;
-                $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan'));
+                $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan', 'borderPath', 'borderSide'));
                 $pdf->setPaper('A4', 'landscape');
                 $pdfContent = $pdf->output();
                 $pdfName = 'Sertifikat_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf';
                 $zip->addFromString($pdfName, $pdfContent);
+
+                // Save to storage
+                $filename = 'Sertifikat_' . str_replace(' ', '_', $penempatan->siswa->nama) . '_' . date('YmdHis') . '_' . uniqid() . '.pdf';
+                if (!file_exists(storage_path('app/public/sertifikat'))) {
+                    mkdir(storage_path('app/public/sertifikat'), 0777, true);
+                }
+                file_put_contents(storage_path('app/public/sertifikat/' . $filename), $pdfContent);
+
+                // Update database
+                \App\Models\Sertifikat::updateOrCreate(
+                    ['penempatan_magang_id' => $penempatan->id],
+                    [
+                        'nilai_id' => $penempatan->nilai->id,
+                        'nomor_sertifikat' => 'SERT/' . date('Y') . '/' . str_pad($penempatan->id, 4, '0', STR_PAD_LEFT),
+                        'file_path' => 'sertifikat/' . $filename,
+                        'tanggal_terbit' => now(),
+                        'status' => 'issued',
+                        'generated_by' => auth()->id()
+                    ]
+                );
             }
             $zip->close();
         } else {
@@ -2179,5 +2293,678 @@ class DashboardController extends Controller
         $pdf->setPaper('A4', 'landscape');
         
         return $pdf->download('Rekap_Magang_' . date('Ymd_His') . '.pdf');
+    }
+
+    // ==================== GURU PEMBIMBING DASHBOARD ====================
+    public function guruPembimbingDashboard()
+    {
+        return view('guru_pembimbing.dashboard');
+    }
+
+    // ==================== KEPALA JURUSAN DASHBOARD ====================
+    public function kepalaJurusanDashboard()
+    {
+        return view('kepala_jurusan.dashboard');
+    }
+
+    // ==================== GURU PENGUJI DASHBOARD ====================
+    public function guruPengujiDashboard()
+    {
+        return view('guru_penguji.dashboard');
+    }
+
+    // ==================== ADMIN: DATA GURU CRUD ====================
+    public function dataGuru(Request $request)
+    {
+        $query = \App\Models\Guru::with(['user', 'jurusan', 'kelas']);
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+        
+        $gurus = $query->latest()->paginate(10);
+        $jurusans = \App\Models\Jurusan::all();
+        $kelas = \App\Models\Kelas::all();
+        
+        return view('admin.data-guru', compact('gurus', 'jurusans', 'kelas'));
+    }
+
+    public function storeGuru(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'nip' => 'nullable|string|max:50',
+            'nama' => 'required|string|max:255',
+            'jurusan_id' => 'nullable|exists:jurusans,id',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'no_telp' => 'nullable|string|max:20',
+            'jabatan' => 'required|in:guru_pembimbing,kepala_jurusan,guru_penguji',
+        ]);
+
+        \DB::transaction(function () use ($request) {
+            $user = \App\Models\User::create([
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'role' => $request->jabatan,
+                'nama_lengkap' => $request->nama,
+                'no_wa' => $request->no_telp ?? '',
+                'is_active' => 1,
+            ]);
+
+            \App\Models\Guru::create([
+                'user_id' => $user->id,
+                'nip' => $request->nip,
+                'nama' => $request->nama,
+                'jurusan_id' => $request->jurusan_id,
+                'kelas_id' => $request->kelas_id,
+                'no_telp' => $request->no_telp,
+                'jabatan' => $request->jabatan,
+                'is_active' => 1,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Data guru berhasil ditambahkan.');
+    }
+
+    public function updateGuru(Request $request, $id)
+    {
+        $guru = \App\Models\Guru::findOrFail($id);
+        $user = $guru->user;
+
+        $request->validate([
+            'username' => 'required|string|unique:users,username,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:6',
+            'nip' => 'nullable|string|max:50',
+            'nama' => 'required|string|max:255',
+            'jurusan_id' => 'nullable|exists:jurusans,id',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'no_telp' => 'nullable|string|max:20',
+            'jabatan' => 'required|in:guru_pembimbing,kepala_jurusan,guru_penguji',
+        ]);
+
+        \DB::transaction(function () use ($request, $guru, $user) {
+            $userData = [
+                'username' => $request->username,
+                'email' => $request->email,
+                'role' => $request->jabatan,
+                'nama_lengkap' => $request->nama,
+                'no_wa' => $request->no_telp ?? '',
+            ];
+
+            if ($request->filled('password')) {
+                $userData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+            }
+
+            $user->update($userData);
+
+            $guru->update([
+                'nip' => $request->nip,
+                'nama' => $request->nama,
+                'jurusan_id' => $request->jurusan_id,
+                'kelas_id' => $request->kelas_id,
+                'no_telp' => $request->no_telp,
+                'jabatan' => $request->jabatan,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Data guru berhasil diperbarui.');
+    }
+
+    public function deleteGuru($id)
+    {
+        $guru = \App\Models\Guru::findOrFail($id);
+        $user = $guru->user;
+
+        \DB::transaction(function () use ($guru, $user) {
+            $guru->delete();
+            if ($user) {
+                $user->delete();
+            }
+        });
+
+        return redirect()->back()->with('success', 'Data guru berhasil dihapus.');
+    }
+
+    public function adminDataMagang(Request $request)
+    {
+        $query = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'guruPembimbing']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('siswa', function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%");
+            });
+        }
+
+        $placements = $query->latest()->paginate(10);
+        return view('admin.data-magang-all', compact('placements'));
+    }
+
+    public function adminLaporanMasalah(Request $request)
+    {
+        $query = \App\Models\LaporanMasalahMagang::with(['siswa.jurusan', 'industri', 'pelapor']);
+
+        if ($request->filled('status') && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $laporans = $query->latest()->paginate(10);
+        return view('admin.laporan-masalah-all', compact('laporans'));
+    }
+
+    public function cetakPengantarForm()
+    {
+        $placements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri'])
+            ->whereIn('status', ['approved', 'ongoing', 'completed'])
+            ->get();
+        return view('admin.cetak-surat.form-pengantar', compact('placements'));
+    }
+
+    public function generatePengantarPDF(Request $request)
+    {
+        $request->validate([
+            'penempatan_magang_id' => 'required|string',
+            'nomor_surat' => 'required|string',
+            'tanggal_surat' => 'required|date',
+            'nama_pejabat' => 'required|string',
+            'jabatan_pejabat' => 'required|string',
+            'pangkat_pejabat' => 'required|string',
+            'nip_pejabat' => 'required|string',
+        ]);
+
+        $activePlacements = collect();
+
+        if ($request->penempatan_magang_id === 'all') {
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+        } elseif (strpos($request->penempatan_magang_id, 'jurusan_') === 0) {
+            $parts = explode('_', $request->penempatan_magang_id);
+            $jurusanId = $parts[1];
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->whereHas('siswa', function($q) use ($jurusanId) {
+                    $q->where('jurusan_id', $jurusanId);
+                })
+                ->get();
+        } elseif (strpos($request->penempatan_magang_id, 'kelas_') === 0) {
+            $parts = explode('_', $request->penempatan_magang_id);
+            $kelasId = $parts[1];
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->whereHas('siswa', function($q) use ($kelasId) {
+                    $q->where('kelas_id', $kelasId);
+                })
+                ->get();
+        } else {
+            // Specific placement ID
+            $exists = \App\Models\PenempatanMagang::where('id', $request->penempatan_magang_id)->exists();
+            if (!$exists) {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Penempatan magang tidak valid.'])->withInput();
+            }
+
+            $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])->findOrFail($request->penempatan_magang_id);
+
+            $groupPlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas'])
+                ->where('industri_id', $penempatan->industri_id)
+                ->where('periode_magang_id', $penempatan->periode_magang_id)
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+
+            $data = [
+                'penempatan' => $penempatan,
+                'groupPlacements' => $groupPlacements,
+                'nomor_surat' => $request->nomor_surat,
+                'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                'nama_pejabat' => $request->nama_pejabat,
+                'jabatan_pejabat' => $request->jabatan_pejabat,
+                'pangkat_pejabat' => $request->pangkat_pejabat,
+                'nip_pejabat' => $request->nip_pejabat,
+            ];
+
+            $pdf = Pdf::loadView('pdf.surat-pengantar', $data);
+            $pdf->setPaper('A4', 'portrait');
+
+            return $pdf->stream('Surat_Pengantar_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf');
+        }
+
+        // If we got here, it's a bulk print (all, jurusan_*, or kelas_*)
+        $groupedPlacements = $activePlacements->groupBy(function($item) {
+            return $item->industri_id . '_' . $item->periode_magang_id;
+        });
+
+        if ($groupedPlacements->isEmpty()) {
+            return redirect()->back()->withErrors(['penempatan_magang_id' => 'Tidak ada data penempatan aktif untuk dicetak.'])->withInput();
+        }
+
+        // If there's only 1 industry group, stream it directly as a single PDF instead of ZIP!
+        if ($groupedPlacements->count() === 1) {
+            $group = $groupedPlacements->first();
+            $penempatan = $group->first();
+            $groupPlacements = $group;
+
+            $data = [
+                'penempatan' => $penempatan,
+                'groupPlacements' => $groupPlacements,
+                'nomor_surat' => $request->nomor_surat,
+                'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                'nama_pejabat' => $request->nama_pejabat,
+                'jabatan_pejabat' => $request->jabatan_pejabat,
+                'pangkat_pejabat' => $request->pangkat_pejabat,
+                'nip_pejabat' => $request->nip_pejabat,
+            ];
+
+            $pdf = Pdf::loadView('pdf.surat-pengantar', $data);
+            $pdf->setPaper('A4', 'portrait');
+
+            return $pdf->stream('Surat_Pengantar_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf');
+        }
+
+        // Multiple industry groups -> download ZIP
+        $zip = new \ZipArchive();
+        $zipFileName = tempnam(sys_get_temp_dir(), 'pengantar_') . '.zip';
+
+        if ($zip->open($zipFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($groupedPlacements as $group) {
+                $penempatan = $group->first();
+                $groupPlacements = $group;
+
+                $data = [
+                    'penempatan' => $penempatan,
+                    'groupPlacements' => $groupPlacements,
+                    'nomor_surat' => $request->nomor_surat,
+                    'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                    'nama_pejabat' => $request->nama_pejabat,
+                    'jabatan_pejabat' => $request->jabatan_pejabat,
+                    'pangkat_pejabat' => $request->pangkat_pejabat,
+                    'nip_pejabat' => $request->nip_pejabat,
+                ];
+
+                $pdf = Pdf::loadView('pdf.surat-pengantar', $data);
+                $pdf->setPaper('A4', 'portrait');
+                $pdfContent = $pdf->output();
+
+                $cleanIndustriName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->industri->nama_industri ?? 'Perusahaan');
+                $periodName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->periodeMagang->nama_periode ?? '');
+                $pdfFilename = 'Surat_Pengantar_' . $cleanIndustriName . ($periodName ? '_' . $periodName : '') . '.pdf';
+
+                $zip->addFromString($pdfFilename, $pdfContent);
+            }
+            $zip->close();
+
+            return response()->download($zipFileName, 'Surat_Pengantar_Semua.zip')->deleteFileAfterSend(true);
+        } else {
+            return redirect()->back()->withErrors(['penempatan_magang_id' => 'Gagal membuat file ZIP.'])->withInput();
+        }
+    }
+
+    public function cetakTugasForm()
+    {
+        $placements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri'])
+            ->whereIn('status', ['approved', 'ongoing', 'completed'])
+            ->get();
+        return view('admin.cetak-surat.form-tugas', compact('placements'));
+    }
+
+    public function generateTugasPDF(Request $request)
+    {
+        $request->validate([
+            'penempatan_magang_id' => 'required|string',
+            'nomor_surat' => 'required|string',
+            'tanggal_surat' => 'required|date',
+            'nama_pemberi' => 'required|string',
+            'nip_pemberi' => 'required|string',
+            'jabatan_pemberi' => 'required|string',
+            'pangkat_pemberi' => 'required|string',
+            'alamat_sekolah' => 'required|string',
+            'keterangan_tugas' => 'required|string',
+        ]);
+
+        $activePlacements = collect();
+
+        if ($request->penempatan_magang_id === 'all') {
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+        } elseif (strpos($request->penempatan_magang_id, 'jurusan_') === 0) {
+            $parts = explode('_', $request->penempatan_magang_id);
+            $jurusanId = $parts[1];
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->whereHas('siswa', function($q) use ($jurusanId) {
+                    $q->where('jurusan_id', $jurusanId);
+                })
+                ->get();
+        } elseif (strpos($request->penempatan_magang_id, 'kelas_') === 0) {
+            $parts = explode('_', $request->penempatan_magang_id);
+            $kelasId = $parts[1];
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->whereHas('siswa', function($q) use ($kelasId) {
+                    $q->where('kelas_id', $kelasId);
+                })
+                ->get();
+        } else {
+            // Specific placement ID
+            $exists = \App\Models\PenempatanMagang::where('id', $request->penempatan_magang_id)->exists();
+            if (!$exists) {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Penempatan magang tidak valid.'])->withInput();
+            }
+
+            $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])->findOrFail($request->penempatan_magang_id);
+
+            $groupPlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas'])
+                ->where('industri_id', $penempatan->industri_id)
+                ->where('periode_magang_id', $penempatan->periode_magang_id)
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+
+            $data = [
+                'penempatan' => $penempatan,
+                'groupPlacements' => $groupPlacements,
+                'nomor_surat' => $request->nomor_surat,
+                'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                'nama_pemberi' => $request->nama_pemberi,
+                'nip_pemberi' => $request->nip_pemberi,
+                'jabatan_pemberi' => $request->jabatan_pemberi,
+                'pangkat_pemberi' => $request->pangkat_pemberi,
+                'alamat_sekolah' => $request->alamat_sekolah,
+                'keterangan_tugas' => $request->keterangan_tugas,
+            ];
+
+            $pdf = Pdf::loadView('pdf.surat-tugas', $data);
+            $pdf->setPaper('A4', 'portrait');
+
+            return $pdf->stream('Surat_Tugas_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf');
+        }
+
+        // If we got here, it's a bulk print (all, jurusan_*, or kelas_*)
+        $groupedPlacements = $activePlacements->groupBy(function($item) {
+            return $item->industri_id . '_' . $item->periode_magang_id;
+        });
+
+        if ($groupedPlacements->isEmpty()) {
+            return redirect()->back()->withErrors(['penempatan_magang_id' => 'Tidak ada data penempatan aktif untuk dicetak.'])->withInput();
+        }
+
+        // If there's only 1 industry group, stream it directly as a single PDF instead of ZIP!
+        if ($groupedPlacements->count() === 1) {
+            $group = $groupedPlacements->first();
+            $penempatan = $group->first();
+            $groupPlacements = $group;
+
+            $data = [
+                'penempatan' => $penempatan,
+                'groupPlacements' => $groupPlacements,
+                'nomor_surat' => $request->nomor_surat,
+                'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                'nama_pemberi' => $request->nama_pemberi,
+                'nip_pemberi' => $request->nip_pemberi,
+                'jabatan_pemberi' => $request->jabatan_pemberi,
+                'pangkat_pemberi' => $request->pangkat_pemberi,
+                'alamat_sekolah' => $request->alamat_sekolah,
+                'keterangan_tugas' => $request->keterangan_tugas,
+            ];
+
+            $pdf = Pdf::loadView('pdf.surat-tugas', $data);
+            $pdf->setPaper('A4', 'portrait');
+
+            return $pdf->stream('Surat_Tugas_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf');
+        }
+
+        // Multiple industry groups -> download ZIP
+        $zip = new \ZipArchive();
+        $zipFileName = tempnam(sys_get_temp_dir(), 'tugas_') . '.zip';
+
+        if ($zip->open($zipFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($groupedPlacements as $group) {
+                $penempatan = $group->first();
+                $groupPlacements = $group;
+
+                $data = [
+                    'penempatan' => $penempatan,
+                    'groupPlacements' => $groupPlacements,
+                    'nomor_surat' => $request->nomor_surat,
+                    'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                    'nama_pemberi' => $request->nama_pemberi,
+                    'nip_pemberi' => $request->nip_pemberi,
+                    'jabatan_pemberi' => $request->jabatan_pemberi,
+                    'pangkat_pemberi' => $request->pangkat_pemberi,
+                    'alamat_sekolah' => $request->alamat_sekolah,
+                    'keterangan_tugas' => $request->keterangan_tugas,
+                ];
+
+                $pdf = Pdf::loadView('pdf.surat-tugas', $data);
+                $pdf->setPaper('A4', 'portrait');
+                $pdfContent = $pdf->output();
+
+                $cleanIndustriName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->industri->nama_industri ?? 'Perusahaan');
+                $periodName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->periodeMagang->nama_periode ?? '');
+                $pdfFilename = 'Surat_Tugas_' . $cleanIndustriName . ($periodName ? '_' . $periodName : '') . '.pdf';
+
+                $zip->addFromString($pdfFilename, $pdfContent);
+            }
+            $zip->close();
+
+            return response()->download($zipFileName, 'Surat_Tugas_Semua.zip')->deleteFileAfterSend(true);
+        } else {
+            return redirect()->back()->withErrors(['penempatan_magang_id' => 'Gagal membuat file ZIP.'])->withInput();
+        }
+    }
+
+    public function cetakDispensasiForm()
+    {
+        $placements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri'])
+            ->whereIn('status', ['approved', 'ongoing', 'completed'])
+            ->get();
+        return view('admin.cetak-surat.form-dispensasi', compact('placements'));
+    }
+
+    public function generateDispensasiPDF(Request $request)
+    {
+        $request->validate([
+            'tipe_surat' => 'required|in:kegiatan,sas',
+            'penempatan_magang_id' => 'required|string',
+            'nomor_surat' => 'required|string',
+            'tanggal_surat' => 'required|date',
+            'nama_pejabat' => 'required|string',
+            'jabatan_pejabat' => 'required|string',
+            'pangkat_pejabat' => 'required|string',
+            'nip_pejabat' => 'required|string',
+            
+            // Tipe 1 fields
+            'nama_kegiatan' => 'required_if:tipe_surat,kegiatan|string|nullable',
+            'tempat_kegiatan' => 'required_if:tipe_surat,kegiatan|string|nullable',
+            'tanggal_kegiatan' => 'required_if:tipe_surat,kegiatan|string|nullable',
+            
+            // Tipe 2 fields
+            'nama_kegiatan_sas' => 'required_if:tipe_surat,sas|string|nullable',
+            'tanggal_izin_sas' => 'required_if:tipe_surat,sas|string|nullable',
+            'kelas_sas' => 'required_if:tipe_surat,sas|string|nullable',
+            'tanggal_penjemputan_sas' => 'required_if:tipe_surat,sas|string|nullable',
+        ]);
+
+        if ($request->penempatan_magang_id === 'all') {
+            $activePlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+
+            $groupedPlacements = $activePlacements->groupBy(function($item) {
+                return $item->industri_id . '_' . $item->periode_magang_id;
+            });
+
+            if ($groupedPlacements->isEmpty()) {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Tidak ada data penempatan aktif untuk dicetak.'])->withInput();
+            }
+
+            $zip = new \ZipArchive();
+            $zipFileName = tempnam(sys_get_temp_dir(), 'dispensasi_') . '.zip';
+
+            if ($zip->open($zipFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+                foreach ($groupedPlacements as $group) {
+                    $penempatan = $group->first();
+                    $groupPlacements = $group;
+
+                    $data = [
+                        'tipe_surat' => $request->tipe_surat,
+                        'penempatan' => $penempatan,
+                        'groupPlacements' => $groupPlacements,
+                        'nomor_surat' => $request->nomor_surat,
+                        'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+                        'nama_pejabat' => $request->nama_pejabat,
+                        'jabatan_pejabat' => $request->jabatan_pejabat,
+                        'pangkat_pejabat' => $request->pangkat_pejabat,
+                        'nip_pejabat' => $request->nip_pejabat,
+                        
+                        // Tipe 1
+                        'nama_kegiatan' => $request->nama_kegiatan,
+                        'tempat_kegiatan' => $request->tempat_kegiatan,
+                        'tanggal_kegiatan' => $request->tanggal_kegiatan,
+                        
+                        // Tipe 2
+                        'nama_kegiatan_sas' => $request->nama_kegiatan_sas,
+                        'tanggal_izin_sas' => $request->tanggal_izin_sas,
+                        'kelas_sas' => $request->kelas_sas,
+                        'tanggal_penjemputan_sas' => $request->tanggal_penjemputan_sas,
+                    ];
+
+                    $pdf = Pdf::loadView('pdf.surat-dispensasi', $data);
+                    $pdf->setPaper('A4', 'portrait');
+                    $pdfContent = $pdf->output();
+
+                    $cleanIndustriName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->industri->nama_industri ?? 'Perusahaan');
+                    $periodName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $penempatan->periodeMagang->nama_periode ?? '');
+                    $pdfFilename = 'Surat_Dispensasi_' . $cleanIndustriName . ($periodName ? '_' . $periodName : '') . '.pdf';
+
+                    $zip->addFromString($pdfFilename, $pdfContent);
+                }
+                $zip->close();
+
+                return response()->download($zipFileName, 'Surat_Dispensasi_Semua.zip')->deleteFileAfterSend(true);
+            } else {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Gagal membuat file ZIP.'])->withInput();
+            }
+        }
+
+        if (strpos($request->penempatan_magang_id, 'industry_') === 0) {
+            $parts = explode('_', $request->penempatan_magang_id);
+            $industriId = $parts[1];
+            $periodeMagangId = $parts[2] ?? null;
+
+            $groupPlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])
+                ->where('industri_id', $industriId)
+                ->when($periodeMagangId, function($q) use ($periodeMagangId) {
+                    return $q->where('periode_magang_id', $periodeMagangId);
+                })
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+
+            if ($groupPlacements->isEmpty()) {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Data penempatan magang tidak ditemukan untuk tempat magang yang dipilih.'])->withInput();
+            }
+
+            $penempatan = $groupPlacements->first();
+        } else {
+            $exists = \App\Models\PenempatanMagang::where('id', $request->penempatan_magang_id)->exists();
+            if (!$exists) {
+                return redirect()->back()->withErrors(['penempatan_magang_id' => 'Penempatan magang tidak valid.'])->withInput();
+            }
+
+            $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'periodeMagang'])->findOrFail($request->penempatan_magang_id);
+
+            $groupPlacements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas'])
+                ->where('industri_id', $penempatan->industri_id)
+                ->where('periode_magang_id', $penempatan->periode_magang_id)
+                ->whereIn('status', ['approved', 'ongoing', 'completed'])
+                ->get();
+        }
+
+        $data = [
+            'tipe_surat' => $request->tipe_surat,
+            'penempatan' => $penempatan,
+            'groupPlacements' => $groupPlacements,
+            'nomor_surat' => $request->nomor_surat,
+            'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+            'nama_pejabat' => $request->nama_pejabat,
+            'jabatan_pejabat' => $request->jabatan_pejabat,
+            'pangkat_pejabat' => $request->pangkat_pejabat,
+            'nip_pejabat' => $request->nip_pejabat,
+            
+            // Tipe 1
+            'nama_kegiatan' => $request->nama_kegiatan,
+            'tempat_kegiatan' => $request->tempat_kegiatan,
+            'tanggal_kegiatan' => $request->tanggal_kegiatan,
+            
+            // Tipe 2
+            'nama_kegiatan_sas' => $request->nama_kegiatan_sas,
+            'tanggal_izin_sas' => $request->tanggal_izin_sas,
+            'kelas_sas' => $request->kelas_sas,
+            'tanggal_penjemputan_sas' => $request->tanggal_penjemputan_sas,
+        ];
+
+        $pdf = Pdf::loadView('pdf.surat-dispensasi', $data);
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream('Surat_Dispensasi_' . str_replace(' ', '_', $penempatan->siswa->nama) . '.pdf');
+    }
+
+    public function cetakSppdForm()
+    {
+        $gurus = \App\Models\Guru::active()->get();
+        $placements = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri'])
+            ->whereIn('status', ['approved', 'ongoing', 'completed'])
+            ->get();
+        return view('admin.cetak-surat.form-sppd', compact('gurus', 'placements'));
+    }
+
+    public function generateSppdPDF(Request $request)
+    {
+        $request->validate([
+            'guru_id' => 'required|exists:gurus,id',
+            'penempatan_magang_id' => 'required|exists:penempatan_magangs,id',
+            'nomor_surat' => 'required|string',
+            'tanggal_surat' => 'required|date',
+            'tempat_berangkat' => 'required|string',
+            'tempat_tujuan' => 'required|string',
+            'tanggal_perjalanan' => 'required|date',
+            'tanggal_kembali' => 'required|date',
+            'alat_angkutan' => 'required|string',
+            'pembebanan_anggaran' => 'required|string',
+            'maksud_perjalanan' => 'required|string',
+            'nama_pejabat' => 'required|string',
+            'nip_pejabat' => 'required|string',
+        ]);
+
+        $guru = \App\Models\Guru::findOrFail($request->guru_id);
+        $penempatan = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'industri'])->findOrFail($request->penempatan_magang_id);
+
+        $data = [
+            'guru' => $guru,
+            'penempatan' => $penempatan,
+            'nomor_surat' => $request->nomor_surat,
+            'tanggal_surat' => \Carbon\Carbon::parse($request->tanggal_surat),
+            'tempat_berangkat' => $request->tempat_berangkat,
+            'tempat_tujuan' => $request->tempat_tujuan,
+            'tanggal_perjalanan' => \Carbon\Carbon::parse($request->tanggal_perjalanan),
+            'tanggal_kembali' => \Carbon\Carbon::parse($request->tanggal_kembali),
+            'alat_angkutan' => $request->alat_angkutan,
+            'pembebanan_anggaran' => $request->pembebanan_anggaran,
+            'maksud_perjalanan' => $request->maksud_perjalanan,
+            'nama_pejabat' => $request->nama_pejabat,
+            'nip_pejabat' => $request->nip_pejabat,
+        ];
+
+        $pdf = Pdf::loadView('pdf.surat-sppd', $data);
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream('SPPD_' . str_replace(' ', '_', $guru->nama) . '.pdf');
     }
 }

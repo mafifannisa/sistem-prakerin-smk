@@ -2,20 +2,11 @@
 
 @section('title', 'Data Siswa')
 
-@section('content')
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Data Siswa</h1>
-            <p class="text-sm text-gray-500 mt-1">Kelola data siswa prakerin SMK Negeri 3 Tuban</p>
-        </div>
-        <div class="text-sm text-gray-600">
-            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
-        </div>
-    </div>
-</header>
+@section('header_breadcrumb', 'Data Siswa')
+@section('header_title', 'DATA SISWA')
 
-<div class="p-8">
+@section('content')
+<div class="p-0">
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
             <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -42,14 +33,35 @@
                     </svg>
                 </div>
                 
-                <select name="jurusan_id" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Semua Jurusan</option>
-                    @foreach($jurusans as $jurusan)
-                        <option value="{{ $jurusan->id }}" {{ request('jurusan_id') == $jurusan->id ? 'selected' : '' }}>
-                            {{ $jurusan->nama_jurusan }}
-                        </option>
-                    @endforeach
-                </select>
+                <!-- Custom Dropdown Jurusan -->
+                <div class="relative inline-block text-left" id="filterJurusanContainer">
+                    <input type="hidden" name="jurusan_id" id="filterJurusanInput" value="{{ request('jurusan_id') }}">
+                    <button type="button" id="filterJurusanBtn" onclick="toggleFilterJurusan()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition inline-flex items-center justify-between gap-2 min-w-[200px]">
+                        <span id="filterJurusanLabel">
+                            @if(request('jurusan_id') && $jurusans->firstWhere('id', request('jurusan_id')))
+                                {{ $jurusans->firstWhere('id', request('jurusan_id'))->nama_jurusan }}
+                            @else
+                                Semua Jurusan
+                            @endif
+                        </span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" id="filterJurusanChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <div id="filterJurusanMenu" class="hidden absolute left-0 mt-1.5 w-72 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-150 py-1.5 z-[99] max-h-60 overflow-y-auto">
+                        <button type="button" onclick="selectFilterJurusan('', 'Semua Jurusan')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            Semua Jurusan
+                        </button>
+                        @foreach($jurusans as $jurusan)
+                            <button type="button" onclick="selectFilterJurusan('{{ $jurusan->id }}', '{{ $jurusan->nama_jurusan }}')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                {{ $jurusan->nama_jurusan }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
                 
                 <button type="submit" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition">
                     Filter
@@ -103,14 +115,14 @@
             <table class="w-full whitespace-nowrap">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">No</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nama / NISN</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">TTL</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jurusan / Kelas</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Kontak</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Wali Murid</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Alamat</th>
-                        <th class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[5%]">No</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[20%]">Nama / NISN</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[12%]">TTL</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[12%]">Jurusan / Kelas</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[18%]">Kontak</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[15%]">Wali Murid</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase w-[13%]">Alamat</th>
+                        <th class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase w-[10%]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -140,7 +152,7 @@
                             <td class="px-4 py-4 text-sm text-gray-600">
                                 <div class="flex flex-col">
                                     <span class="font-medium">{{ $siswa->jurusan->kode_jurusan ?? '-' }}</span>
-                                    <span class="text-xs text-gray-400">{{ $siswa->kelas ?? '-' }}</span>
+                                    <span class="text-xs text-gray-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</span>
                                 </div>
                             </td>
 
@@ -169,7 +181,7 @@
                                         '{{ $siswa->nama }}', 
                                         '{{ $siswa->nisn }}', 
                                         {{ $siswa->jurusan_id }}, 
-                                        '{{ $siswa->kelas }}', 
+                                        {{ $siswa->kelas_id ?? 'null' }}, 
                                         '{{ $siswa->email }}', 
                                         '{{ $siswa->no_wa }}', 
                                         '{{ $siswa->tempat_lahir }}', 
@@ -268,7 +280,12 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Kelas *</label>
-                        <input type="text" name="kelas" id="kelas" required placeholder="Contoh: XII RPL 1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        <select name="kelas_id" id="kelas_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Pilih Kelas</option>
+                            @foreach($kelas as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div>
@@ -325,13 +342,13 @@ function openModal() {
 }
 
 // Parameter diupdate sesuai data baru
-function editSiswa(id, nama, nisn, jurusanId, kelas, email, noWa, tempatLahir, tglLahir, namaWali, noWaWali, alamat) {
+function editSiswa(id, nama, nisn, jurusanId, kelasId, email, noWa, tempatLahir, tglLahir, namaWali, noWaWali, alamat) {
     document.getElementById('modalTitle').textContent = 'Edit Siswa';
     
     document.getElementById('nama').value = nama;
     document.getElementById('nisn').value = nisn;
     document.getElementById('jurusan_id').value = jurusanId;
-    document.getElementById('kelas').value = kelas;
+    document.getElementById('kelas_id').value = kelasId;
     document.getElementById('email').value = email;
     document.getElementById('no_wa').value = noWa;
     
@@ -368,6 +385,36 @@ function deleteSiswa(id, nama) {
 
 document.getElementById('siswaModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
+});
+
+function toggleFilterJurusan() {
+    const menu = document.getElementById('filterJurusanMenu');
+    const chevron = document.getElementById('filterJurusanChevron');
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+    } else {
+        menu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+    }
+}
+
+function selectFilterJurusan(id, name) {
+    document.getElementById('filterJurusanInput').value = id;
+    document.getElementById('filterJurusanLabel').textContent = name;
+    document.getElementById('filterJurusanMenu').classList.add('hidden');
+    document.getElementById('filterJurusanChevron').classList.remove('rotate-180');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const container = document.getElementById('filterJurusanContainer');
+    const menu = document.getElementById('filterJurusanMenu');
+    const chevron = document.getElementById('filterJurusanChevron');
+    if (container && !container.contains(event.target)) {
+        menu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+    }
 });
 </script>
 @endsection

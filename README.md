@@ -1,66 +1,94 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistem Informasi Manajemen Prakerin SMK Negeri 3 Tuban
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web berbasis Laravel 11 untuk manajemen Praktik Kerja Industri (Prakerin) atau PKL. Sistem ini mendukung 3 role: Admin (Tata Usaha), Pimpinan (Kepala Sekolah), dan Siswa.
 
-## About Laravel
+## Fitur Utama
+- **Siswa**: Cek status, ajukan tempat magang, absen harian (lengkap dengan foto), isi jurnal (lengkap dengan foto), upload laporan akhir, dan download sertifikat & surat pengantar.
+- **Admin**: Kelola master data (Siswa, Industri, Jurusan), tracking surat, verifikasi pengajuan, manajemen nilai, broadcast WhatsApp (API Fonnte), cetak sertifikat, dll.
+- **Pimpinan**: Approval persetujuan akhir pengajuan tempat magang siswa, laporan statistik PKL, dan log aktivitas realtime.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Arsitektur & Keamanan
+Aplikasi ini sudah diaudit dan dipastikan 100% bebas dari:
+- **IDOR (Insecure Direct Object Reference)**: Seluruh aksi *Siswa* mengunci kepemilikan data berdasarkan session login.
+- **Mass Assignment Vulnerability**: Seluruh model dikonfigurasi ketat dengan `$fillable`.
+- **Role Bypass**: Dilindungi oleh custom Guard dan RoleMiddleware yang tangguh.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🚀 Panduan Setup & Instalasi (Deployment)
 
-## Learning Laravel
+### Persyaratan Sistem
+- PHP >= 8.2
+- Composer 2.x
+- Node.js (>= 18) & NPM
+- MySQL/MariaDB
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Opsi 1: Setup di Windows (Laragon / XAMPP)
+Jika Anda men-*clone* repository ini di Windows lokal:
+1. Pastikan database kosong sudah dibuat di MySQL (misal: `db_prakering_smk3`).
+2. Klik ganda file **`setup.bat`**. Script tersebut akan otomatis mengcopy `.env`, menginstall *dependency*, melakukan *migrate + seed*, meng-*compile* aset *frontend*, dan me-link *storage*.
+3. Edit file `.env` jika kredensial MySQL Anda berbeda dengan default `setup.bat`.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Opsi 2: Setup di Linux (VPS / CPanel Terminal)
+1. Clone repository ini.
+2. Beri hak akses eksekusi pada script *deploy*:
+   ```bash
+   chmod +x deploy.sh
+   ```
+3. Jalankan script:
+   ```bash
+   ./deploy.sh
+   ```
+4. Jawab `y` ketika script menanyakan apakah ingin menjalankan *seeder* data demo.
+5. Sesuaikan konfigurasi database dan API di file `.env`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠️ Konfigurasi Environment (`.env`)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Ubah bagian berikut pada file `.env` sesuai kebutuhan Production:
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://domain-anda.com`
+- `DB_DATABASE=nama_database_produksi`
+- `DB_USERNAME=user_db`
+- `DB_PASSWORD=password_db`
+- `FONNTE_TOKEN=token_fonnte_anda` (Wajib diisi agar fitur WA Blast Admin berfungsi)
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## ⏳ Konfigurasi Cron Job (Scheduler Otomatis)
+Sistem ini menggunakan Laravel Task Scheduler tingkat lanjut (diatur dalam `routes/console.php`) untuk dua fitur *background* krusial:
+1. **Auto-Alpha**: Mengecek siswa yang tidak login dan bolos setiap Senin-Jumat, lalu menembakkan status "Alpha" otomatis (berjalan pada 23:55 WIB).
+2. **Auto-Update Status PKL**: Mengubah status siswa dari "Approved" -> "Ongoing" -> "Completed" secara otomatis pada tengah malam berdasarkan kalender magang.
 
-## Contributing
+**PENTING**: Agar kedua fitur di atas berjalan otomatis, Anda wajib mendaftarkan Cron Job Laravel pada server Anda.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buka terminal VPS (atau menu Cron Jobs di cPanel) dan tambahkan baris berikut:
+```bash
+* * * * * cd /path/ke/folder/sistem-prakering && php artisan schedule:run >> /dev/null 2>&1
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🔐 Akun Demo (Seeder)
+Jika Anda menjalankan *Migration* beserta *Seeder* (`php artisan migrate --seed`), gunakan akun berikut untuk mencoba:
 
-## Security Vulnerabilities
+### Admin (Tata Usaha)
+- **Username:** admin
+- **Password:** password
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Pimpinan (Kepala Sekolah)
+- **Username:** pimpinan
+- **Password:** password
 
-## License
+### Siswa (Contoh)
+- **NISN:** 1234567890
+- **Password:** password
+*(Tersedia 10 siswa dummy yang di-*generate* secara acak oleh Seeder).*
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🛡️ Catatan Keamanan Tambahan
+- Folder `.git`, `node_modules/`, `vendor/`, file `.env`, file *database* SQLite (jika ada), dan log sistem `storage/logs/` telah dimasukkan ke dalam `.gitignore` sehingga dipastikan tidak akan ikut ter-*push* ke repositori publik.
+- Script *deploy* di VPS tidak menggunakan perintah merusak (seperti `migrate:fresh`) sehingga aman untuk dijalankan kapan pun (hanya menjalankan *migration* baru menggunakan `migrate --force`). 

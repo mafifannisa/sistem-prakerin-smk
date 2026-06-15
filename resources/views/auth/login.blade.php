@@ -94,30 +94,7 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="role" class="block text-white/90 text-sm font-semibold mb-2">
-                                Masuk Sebagai
-                            </label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                    </svg>
-                                </span>
-                                <select id="role" 
-                                        name="role" 
-                                        class="w-full pl-12 pr-10 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm appearance-none cursor-pointer">
-                                    <option value="siswa" class="text-gray-800">Siswa</option>
-                                    <option value="admin" class="text-gray-800">Admin</option>
-                                    <option value="pimpinan" class="text-gray-800">Pimpinan</option>
-                                </select>
-                                <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 pointer-events-none">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </span>
-                            </div>
-                        </div>
+
 
                         <div class="flex items-center justify-between mb-6">
                             <label class="flex items-center cursor-pointer">

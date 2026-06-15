@@ -66,6 +66,12 @@ class User extends Authenticatable
         return $this->hasMany(LogWa::class, 'created_by');
     }
 
+    // Relasi: User has one Guru profile
+    public function guru()
+    {
+        return $this->hasOne(Guru::class);
+    }
+
     // Scope: Hanya user aktif
     public function scopeActive($query)
     {
@@ -88,5 +94,23 @@ class User extends Authenticatable
     public function isPimpinan()
     {
         return $this->role === 'pimpinan';
+    }
+
+    // Helper: Cek apakah guru pembimbing
+    public function isGuruPembimbing()
+    {
+        return $this->role === 'guru_pembimbing';
+    }
+
+    // Helper: Cek apakah kepala jurusan
+    public function isKepalaJurusan()
+    {
+        return $this->role === 'kepala_jurusan';
+    }
+
+    // Helper: Cek apakah guru penguji
+    public function isGuruPenguji()
+    {
+        return $this->role === 'guru_penguji';
     }
 }

@@ -17,6 +17,8 @@ Route::get('/contact-admin', function () {
     return view('auth.contact-admin');
 })->name('contact.admin');
 
+Route::get('/sertifikat/view/{id}', [SuratController::class, 'publicDownloadSertifikat'])->name('sertifikat.public-download');
+
 // ==================== ADMIN ROUTES ====================
 Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
@@ -47,16 +49,24 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::put('/data-jurusan/{id}', [DashboardController::class, 'updateJurusan'])->name('admin.data-jurusan.update');
     Route::delete('/data-jurusan/{id}', [DashboardController::class, 'deleteJurusan'])->name('admin.data-jurusan.delete');
 
-    //VERIFIKASI PENGAJUAN
-    Route::get('/verifikasi-pengajuan', [DashboardController::class, 'adminVerifikasi'])->name('admin.verifikasi');
-    Route::post('/verifikasi-pengajuan/{id}/approve', [DashboardController::class, 'adminApprove'])->name('admin.verifikasi.approve');
-    Route::post('/verifikasi-pengajuan/{id}/reject', [DashboardController::class, 'adminReject'])->name('admin.verifikasi.reject');
-
-    // DATA SURAT (Pengganti Generate Surat & Tracking Surat)
-    Route::get('/data-surat', [DashboardController::class, 'viewDataSurat'])->name('admin.data.surat');
+    // DATA SURAT & CETAK SURAT
+    Route::get('/cetak-surat', [DashboardController::class, 'viewDataSurat'])->name('admin.data.surat');
     Route::post('/data-surat/{id}/approve', [DashboardController::class, 'adminApprove'])->name('admin.data.surat.approve');
     Route::post('/data-surat/{id}/reject', [DashboardController::class, 'adminReject'])->name('admin.data.surat.reject');
     Route::get('/data-surat/download/{surat_id}', [DashboardController::class, 'downloadSuratAdmin'])->name('admin.data.surat.download');
+
+    // ROUTES UNTUK CETAK SURAT DARI TEMPLATE
+    Route::get('/cetak-surat/pengantar', [DashboardController::class, 'cetakPengantarForm'])->name('admin.cetak.pengantar');
+    Route::post('/cetak-surat/pengantar/pdf', [DashboardController::class, 'generatePengantarPDF'])->name('admin.cetak.pengantar.pdf');
+
+    Route::get('/cetak-surat/tugas', [DashboardController::class, 'cetakTugasForm'])->name('admin.cetak.tugas');
+    Route::post('/cetak-surat/tugas/pdf', [DashboardController::class, 'generateTugasPDF'])->name('admin.cetak.tugas.pdf');
+
+    Route::get('/cetak-surat/dispensasi', [DashboardController::class, 'cetakDispensasiForm'])->name('admin.cetak.dispensasi');
+    Route::post('/cetak-surat/dispensasi/pdf', [DashboardController::class, 'generateDispensasiPDF'])->name('admin.cetak.dispensasi.pdf');
+
+    Route::get('/cetak-surat/sppd', [DashboardController::class, 'cetakSppdForm'])->name('admin.cetak.sppd');
+    Route::post('/cetak-surat/sppd/pdf', [DashboardController::class, 'generateSppdPDF'])->name('admin.cetak.sppd.pdf');
     
     // SURAT MASUK (Balasan Industri)
     Route::get('/surat-masuk', [DashboardController::class, 'viewSuratMasuk'])->name('admin.surat-masuk');
@@ -74,6 +84,8 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::get('/generate-sertifikat/batch', [\App\Http\Controllers\Auth\DashboardController::class, 'generateSertifikatBatch'])->name('admin.generate-sertifikat.batch');
     Route::post('/generate-sertifikat/kirim/{id}', [\App\Http\Controllers\Auth\DashboardController::class, 'kirimSertifikat'])->name('admin.generate-sertifikat.kirim');
     Route::post('/generate-sertifikat/batch-zip', [\App\Http\Controllers\Auth\DashboardController::class, 'downloadBatchZip'])->name('admin.generate-sertifikat.batch-zip');
+    Route::post('/generate-sertifikat/border', [DashboardController::class, 'uploadBorderTemplate'])->name('admin.generate-sertifikat.upload-border');
+    Route::delete('/generate-sertifikat/border/{id}', [DashboardController::class, 'deleteBorderTemplate'])->name('admin.generate-sertifikat.delete-border');
     
     // WHATSAPP BLAST
     Route::get('/wa-blast', [DashboardController::class, 'viewWaBlast'])->name('admin.wa-blast');
@@ -96,10 +108,17 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     Route::post('/pengumuman', [DashboardController::class, 'storePengumuman'])->name('admin.pengumuman.store');
     Route::delete('/pengumuman/{id}', [DashboardController::class, 'deletePengumuman'])->name('admin.pengumuman.delete');
 
-    // HALAMAN KONTROL DURASI MAGANG
-    Route::get('/kontrol-magang', [DashboardController::class, 'kontrolMagangView'])->name('admin.kontrol-magang');
-    Route::post('/kontrol-magang/{id}/start', [DashboardController::class, 'startMagang'])->name('admin.verifikasi.start');
-    Route::post('/kontrol-magang/{id}/end', [DashboardController::class, 'endMagang'])->name('admin.verifikasi.end');
+
+
+    // DATA GURU
+    Route::get('/data-guru', [DashboardController::class, 'dataGuru'])->name('admin.data-guru');
+    Route::post('/data-guru', [DashboardController::class, 'storeGuru'])->name('admin.data-guru.store');
+    Route::put('/data-guru/{id}', [DashboardController::class, 'updateGuru'])->name('admin.data-guru.update');
+    Route::delete('/data-guru/{id}', [DashboardController::class, 'deleteGuru'])->name('admin.data-guru.delete');
+
+    // DATA MAGANG & LAPORAN MASALAH
+    Route::get('/data-magang-all', [DashboardController::class, 'adminDataMagang'])->name('admin.data-magang-all');
+    Route::get('/laporan-masalah-all', [DashboardController::class, 'adminLaporanMasalah'])->name('admin.laporan-masalah-all');
     
 });
 
@@ -159,9 +178,19 @@ Route::middleware(['role:siswa'])->prefix('siswa')->group(function () {
     Route::get('/laporan/jurnal', [LaporanController::class, 'jurnal'])->name('siswa.laporan.jurnal');
     Route::post('/laporan/jurnal', [LaporanController::class, 'storeJurnal']);
     
+    // Riwayat
+    Route::get('/riwayat/absensi', [LaporanController::class, 'riwayatAbsensi'])->name('siswa.riwayat.absensi');
+    Route::get('/riwayat/jurnal', [LaporanController::class, 'riwayatJurnal'])->name('siswa.riwayat.jurnal');
+    Route::get('/riwayat/laporan-pkl', [LaporanController::class, 'riwayatLaporan'])->name('siswa.riwayat.laporan');
+    Route::get('/riwayat/nilai-teknis', [LaporanController::class, 'riwayatNilai'])->name('siswa.riwayat.nilai');
+    
     // Laporan PKL
     Route::get('/laporan/laporan-pkl', [LaporanController::class, 'laporanPKL'])->name('siswa.laporan.pkl');
     Route::post('/laporan/laporan-pkl', [LaporanController::class, 'storeLaporanPKL']);
+
+    // Input Nilai
+    Route::get('/laporan/nilai', [LaporanController::class, 'nilai'])->name('siswa.laporan.nilai');
+    Route::post('/laporan/nilai', [LaporanController::class, 'storeNilai'])->name('siswa.laporan.nilai.store');
 
     // Download Surat
     Route::get('/download-surat', [SuratController::class, 'index'])->name('siswa.download.surat');
@@ -176,6 +205,7 @@ Route::middleware(['role:siswa'])->prefix('siswa')->group(function () {
     // Download Sertifikat 
     Route::get('/download-sertifikat', [SuratController::class, 'downloadSertifikat'])->name('siswa.download.sertifikat');
     Route::get('/download-sertifikat/pdf', [SuratController::class, 'generateSertifikatPDF'])->name('siswa.download.sertifikat.pdf');
+    Route::post('/download-sertifikat/email', [SuratController::class, 'kirimEmailSertifikat'])->name('siswa.kirim-email-sertifikat');
 
     // Bantuan
     Route::get('/bantuan', [SuratController::class, 'bantuan'])->name('siswa.bantuan');
@@ -185,6 +215,53 @@ Route::middleware(['role:siswa'])->prefix('siswa')->group(function () {
 
     Route::post('/update-profil', [DashboardController::class, 'updateNoWa'])->name('siswa.update.profil');
 
+});
+
+// ==================== GURU PEMBIMBING ROUTES ====================
+Route::middleware(['role:guru_pembimbing'])->prefix('guru-pembimbing')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\GuruPembimbingController::class, 'dashboard'])->name('guru_pembimbing.dashboard');
+    Route::get('/data-siswa', [\App\Http\Controllers\GuruPembimbingController::class, 'dataSiswa'])->name('guru_pembimbing.data-siswa');
+    Route::get('/rekap-absen', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapAbsen'])->name('guru_pembimbing.rekap-absen');
+    Route::get('/rekap-jurnal', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapJurnal'])->name('guru_pembimbing.rekap-jurnal');
+    Route::post('/rekap-jurnal/{id}/verify', [\App\Http\Controllers\GuruPembimbingController::class, 'verifyJurnal'])->name('guru_pembimbing.rekap-jurnal.verify');
+    Route::get('/rekap-laporan', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapLaporan'])->name('guru_pembimbing.rekap-laporan');
+    Route::post('/rekap-laporan/{id}/verify', [\App\Http\Controllers\GuruPembimbingController::class, 'verifyLaporan'])->name('guru_pembimbing.rekap-laporan.verify');
+    Route::post('/rekap-laporan/{id}/revision', [\App\Http\Controllers\GuruPembimbingController::class, 'revisionLaporan'])->name('guru_pembimbing.rekap-laporan.revision');
+    Route::get('/laporan-masalah', [\App\Http\Controllers\GuruPembimbingController::class, 'laporanMasalah'])->name('guru_pembimbing.laporan-masalah');
+    Route::post('/laporan-masalah', [\App\Http\Controllers\GuruPembimbingController::class, 'storeMasalah'])->name('guru_pembimbing.laporan-masalah.store');
+});
+
+// ==================== KEPALA JURUSAN ROUTES ====================
+Route::middleware(['role:kepala_jurusan'])->prefix('kepala-jurusan')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\KepalaJurusanController::class, 'dashboard'])->name('kepala_jurusan.dashboard');
+    Route::get('/data-siswa', [\App\Http\Controllers\KepalaJurusanController::class, 'dataSiswa'])->name('kepala_jurusan.data-siswa');
+    Route::get('/data-magang', [\App\Http\Controllers\KepalaJurusanController::class, 'dataMagang'])->name('kepala_jurusan.data-magang');
+    Route::post('/data-magang', [\App\Http\Controllers\KepalaJurusanController::class, 'storeMagang'])->name('kepala_jurusan.data-magang.store');
+    Route::post('/data-magang/{id}/update', [\App\Http\Controllers\KepalaJurusanController::class, 'updateMagang'])->name('kepala_jurusan.data-magang.update');
+    Route::delete('/data-magang/{id}', [\App\Http\Controllers\KepalaJurusanController::class, 'destroyMagang'])->name('kepala_jurusan.data-magang.destroy');
+    Route::get('/rekap-absen', [\App\Http\Controllers\KepalaJurusanController::class, 'rekapAbsen'])->name('kepala_jurusan.rekap-absen');
+    Route::get('/rekap-jurnal', [\App\Http\Controllers\KepalaJurusanController::class, 'rekapJurnal'])->name('kepala_jurusan.rekap-jurnal');
+    Route::delete('/rekap-jurnal/{id}', [\App\Http\Controllers\KepalaJurusanController::class, 'destroyJurnal'])->name('kepala_jurusan.rekap-jurnal.destroy');
+    Route::get('/rekap-laporan', [\App\Http\Controllers\KepalaJurusanController::class, 'rekapLaporan'])->name('kepala_jurusan.rekap-laporan');
+    Route::get('/import-nilai', [\App\Http\Controllers\KepalaJurusanController::class, 'importNilai'])->name('kepala_jurusan.import-nilai');
+    Route::post('/import-nilai/{placement_id}', [\App\Http\Controllers\KepalaJurusanController::class, 'storeNilai'])->name('kepala_jurusan.import-nilai.store');
+    Route::get('/laporan-masalah', [\App\Http\Controllers\KepalaJurusanController::class, 'laporanMasalah'])->name('kepala_jurusan.laporan-masalah');
+    Route::post('/laporan-masalah/{id}/resolve', [\App\Http\Controllers\KepalaJurusanController::class, 'resolveMasalah'])->name('kepala_jurusan.laporan-masalah.resolve');
+    Route::get('/ujian-magang', [\App\Http\Controllers\KepalaJurusanController::class, 'ujianMagang'])->name('kepala_jurusan.ujian-magang');
+    Route::post('/ujian-magang/{placement_id}', [\App\Http\Controllers\KepalaJurusanController::class, 'storeUjian'])->name('kepala_jurusan.ujian-magang.store');
+    Route::post('/ujian-magang/{placement_id}/assign-penguji', [\App\Http\Controllers\KepalaJurusanController::class, 'assignPenguji'])->name('kepala_jurusan.ujian-magang.assign-penguji');
+
+    // Periode Magang
+    Route::post('/periode-magang', [\App\Http\Controllers\KepalaJurusanController::class, 'storePeriode'])->name('kepala_jurusan.periode-magang.store');
+    Route::post('/periode-magang/{id}/update', [\App\Http\Controllers\KepalaJurusanController::class, 'updatePeriode'])->name('kepala_jurusan.periode-magang.update');
+    Route::delete('/periode-magang/{id}', [\App\Http\Controllers\KepalaJurusanController::class, 'destroyPeriode'])->name('kepala_jurusan.periode-magang.destroy');
+});
+
+// ==================== GURU PENGUJI ROUTES ====================
+Route::middleware(['role:guru_penguji'])->prefix('guru-penguji')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\GuruPengujiController::class, 'dashboard'])->name('guru_penguji.dashboard');
+    Route::get('/ujian-magang', [\App\Http\Controllers\GuruPengujiController::class, 'ujianMagang'])->name('guru_penguji.ujian-magang');
+    Route::post('/ujian-magang/{placement_id}', [\App\Http\Controllers\GuruPengujiController::class, 'storeUjian'])->name('guru_penguji.ujian-magang.store');
 });
 
 // ==================== HOME REDIRECT ====================

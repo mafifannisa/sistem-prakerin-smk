@@ -11,6 +11,7 @@ use App\Models\Notifikasi;
 use App\Models\Siswa;
 use App\Models\Industri;
 use App\Models\Pengumuman;
+use App\Models\Nilai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -137,7 +138,7 @@ class LaporanController extends Controller
                         'judul' => 'Absensi Terlewat - Auto Alpha',
                         'pesan' => 'Anda tidak mengisi absensi tanggal ' . $dateStr . '. Status tercatat Alpha.',
                         'jenis' => 'error',
-                        'tipe' => 'absensi',
+                        'tipe' => 'umum',
                         'is_read' => false,
                     ]);
                 }
@@ -288,15 +289,15 @@ class LaporanController extends Controller
             'kegiatan' => $request->kegiatan,
             'durasi_jam' => $request->durasi_jam,
             'bukti_foto' => $fotoPath,
-            'status' => 'pending',
+            'status' => 'disetujui',
         ]);
 
         // Buat notifikasi
         Notifikasi::create([
             'siswa_id' => $siswaId,
             'judul' => 'Jurnal Harian Berhasil Dikirim',
-            'pesan' => 'Jurnal hari ' . $request->tanggal . ' berhasil dikirim. Tunggu approval pembimbing.',
-            'jenis' => 'info',
+            'pesan' => 'Jurnal hari ' . $request->tanggal . ' berhasil disimpan.',
+            'jenis' => 'success',
             'tipe' => 'umum',
             'is_read' => false,
         ]);
@@ -349,11 +350,11 @@ class LaporanController extends Controller
         $siswaId = session('siswa_id');
         $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
 
-        // Cek apakah sudah upload laporan
-        $existing = LaporanPKL::where('siswa_id', $siswaId)->first();
+        // Cek apakah sudah upload laporan dan statusnya bukan perlu_revisi
+        $existing = LaporanPKL::where('siswa_id', $siswaId)->latest()->first();
         
-        if ($existing) {
-            return back()->with('error', 'Anda sudah mengupload laporan PKL!');
+        if ($existing && in_array($existing->status, ['pending', 'disetujui'])) {
+            return back()->with('error', 'Anda sudah mengupload laporan PKL dan sedang diproses atau disetujui!');
         }
 
         // Upload file PDF
@@ -381,6 +382,125 @@ class LaporanController extends Controller
         ]);
 
         return back()->with('success', 'Laporan PKL berhasil diupload!');
+    }
+
+    // ==================== INPUT NILAI TEKNIS ====================
+    public function nilai()
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
+        
+        $bolehAbsen = false;
+        $pesanLock = '';
+        
+        if (!$penempatan) {
+            $bolehAbsen = false;
+            $pesanLock = 'Anda belum memiliki penempatan magang.';
+        } elseif ($penempatan->status === 'pending') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda masih menunggu approval.';
+        } elseif ($penempatan->status === 'rejected') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda ditolak.';
+        } elseif (in_array($penempatan->status, ['approved', 'ongoing', 'completed'])) {
+            $bolehAbsen = true;
+        }
+        
+        $nilai = null;
+        if ($penempatan) {
+            $nilai = Nilai::where('penempatan_magang_id', $penempatan->id)->first();
+        }
+        
+        return view('siswa.laporan.nilai', compact('nilai', 'penempatan', 'bolehAbsen', 'pesanLock'));
+    }
+
+    public function storeNilai(Request $request)
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
+        
+        if (!$penempatan) {
+            return back()->with('error', 'Anda belum memiliki penempatan magang aktif.');
+        }
+
+        $existingNilai = Nilai::where('penempatan_magang_id', $penempatan->id)->first();
+
+        $rules = [
+            'kegiatan_1' => 'required|string|max:255',
+            'nilai_1' => 'required|numeric|min:0|max:100',
+            'kegiatan_2' => 'required|string|max:255',
+            'nilai_2' => 'required|numeric|min:0|max:100',
+            'kegiatan_3' => 'required|string|max:255',
+            'nilai_3' => 'required|numeric|min:0|max:100',
+        ];
+
+        if ($existingNilai && $existingNilai->foto_nilai) {
+            $rules['foto_nilai'] = 'nullable|image|max:2048';
+        } else {
+            $rules['foto_nilai'] = 'required|image|max:2048';
+        }
+
+        $request->validate($rules);
+
+        // Upload foto
+        $fotoPath = $existingNilai ? $existingNilai->foto_nilai : null;
+        if ($request->hasFile('foto_nilai')) {
+            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
+                Storage::disk('public')->delete($fotoPath);
+            }
+            $fotoPath = $request->file('foto_nilai')->store('nilai-teknis', 'public');
+        }
+
+        $keg1 = $request->kegiatan_1;
+        $val1 = floatval($request->nilai_1);
+        $keg2 = $request->kegiatan_2;
+        $val2 = floatval($request->nilai_2);
+        $keg3 = $request->kegiatan_3;
+        $val3 = floatval($request->nilai_3);
+
+        $avgTeknis = ($val1 + $val2 + $val3) / 3;
+
+        // If non-technical grades are already filled, compute overall average
+        if ($existingNilai && $existingNilai->nilai_sikap !== null && $existingNilai->nilai_keterampilan !== null && $existingNilai->nilai_pengetahuan !== null) {
+            $akhir = ($val1 + $val2 + $val3 + floatval($existingNilai->nilai_sikap) + floatval($existingNilai->nilai_keterampilan) + floatval($existingNilai->nilai_pengetahuan)) / 6;
+        } else {
+            $akhir = $avgTeknis;
+        }
+
+        // Calculate predikat
+        $predikat = 'E';
+        if ($akhir >= 86) $predikat = 'A';
+        elseif ($akhir >= 70) $predikat = 'B';
+        elseif ($akhir >= 56) $predikat = 'C';
+        elseif ($akhir >= 40) $predikat = 'D';
+
+        Nilai::updateOrCreate(
+            ['penempatan_magang_id' => $penempatan->id],
+            [
+                'kegiatan_1' => $keg1,
+                'nilai_1' => $val1,
+                'kegiatan_2' => $keg2,
+                'nilai_2' => $val2,
+                'kegiatan_3' => $keg3,
+                'nilai_3' => $val3,
+                'foto_nilai' => $fotoPath,
+                'nilai_akhir' => $akhir,
+                'predikat' => $predikat,
+                'tanggal_input' => now(),
+            ]
+        );
+
+        // Buat notifikasi
+        Notifikasi::create([
+            'siswa_id' => $siswaId,
+            'judul' => 'Nilai Teknis Berhasil Diinput',
+            'pesan' => 'Nilai teknis magang Anda berhasil disimpan.',
+            'jenis' => 'success',
+            'tipe' => 'umum',
+            'is_read' => false,
+        ]);
+
+        return redirect()->route('siswa.riwayat.nilai')->with('success', 'Nilai teknis berhasil disimpan!');
     }
 
     // ==================== HELPER FUNCTIONS ====================
@@ -530,5 +650,132 @@ class LaporanController extends Controller
             elseif ($item['status'] === 'current') $completed += 0.5;
         }
         return ($completed / $total) * 100;
+    }
+
+    // ==================== RIWAYAT ABSENSI & JURNAL ====================
+    public function riwayatAbsensi()
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
+        
+        $bolehAbsen = false;
+        $pesanLock = '';
+        
+        if (!$penempatan) {
+            $bolehAbsen = false;
+            $pesanLock = 'Anda belum memiliki penempatan magang.';
+        } elseif ($penempatan->status === 'pending') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda masih menunggu approval.';
+        } elseif ($penempatan->status === 'rejected') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda ditolak.';
+        } elseif (in_array($penempatan->status, ['approved', 'ongoing', 'completed'])) {
+            $bolehAbsen = true;
+        }
+        
+        if (!$bolehAbsen) {
+            return view('siswa.riwayat.absensi', compact('penempatan', 'bolehAbsen', 'pesanLock'));
+        }
+        
+        $absensis = Absensi::where('siswa_id', $siswaId)
+                        ->orderBy('tanggal', 'desc')
+                        ->paginate(15);
+                        
+        return view('siswa.riwayat.absensi', compact('absensis', 'penempatan', 'bolehAbsen', 'pesanLock'));
+    }
+
+    public function riwayatJurnal()
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
+        
+        $bolehAbsen = false;
+        $pesanLock = '';
+        
+        if (!$penempatan) {
+            $bolehAbsen = false;
+            $pesanLock = 'Anda belum memiliki penempatan magang.';
+        } elseif ($penempatan->status === 'pending') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda masih menunggu approval.';
+        } elseif ($penempatan->status === 'rejected') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda ditolak.';
+        } elseif (in_array($penempatan->status, ['approved', 'ongoing', 'completed'])) {
+            $bolehAbsen = true;
+        }
+        
+        if (!$bolehAbsen) {
+            return view('siswa.riwayat.jurnal', compact('penempatan', 'bolehAbsen', 'pesanLock'));
+        }
+        
+        $jurnals = JurnalHarian::where('siswa_id', $siswaId)
+                            ->orderBy('tanggal', 'desc')
+                            ->paginate(15);
+                            
+        return view('siswa.riwayat.jurnal', compact('jurnals', 'penempatan', 'bolehAbsen', 'pesanLock'));
+    }
+
+    public function riwayatLaporan()
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::where('siswa_id', $siswaId)->first();
+        
+        $bolehAbsen = false;
+        $pesanLock = '';
+        
+        if (!$penempatan) {
+            $bolehAbsen = false;
+            $pesanLock = 'Anda belum memiliki penempatan magang.';
+        } elseif ($penempatan->status === 'pending') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda masih menunggu approval.';
+        } elseif ($penempatan->status === 'rejected') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda ditolak.';
+        } elseif (in_array($penempatan->status, ['approved', 'ongoing', 'completed'])) {
+            $bolehAbsen = true;
+        }
+        
+        if (!$bolehAbsen) {
+            return view('siswa.riwayat.laporan-pkl', compact('penempatan', 'bolehAbsen', 'pesanLock'));
+        }
+        
+        $laporans = LaporanPKL::where('siswa_id', $siswaId)
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10);
+                            
+        return view('siswa.riwayat.laporan-pkl', compact('laporans', 'penempatan', 'bolehAbsen', 'pesanLock'));
+    }
+
+    public function riwayatNilai()
+    {
+        $siswaId = session('siswa_id');
+        $penempatan = PenempatanMagang::with('nilai')->where('siswa_id', $siswaId)->first();
+        
+        $bolehAbsen = false;
+        $pesanLock = '';
+        
+        if (!$penempatan) {
+            $bolehAbsen = false;
+            $pesanLock = 'Anda belum memiliki penempatan magang.';
+        } elseif ($penempatan->status === 'pending') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda masih menunggu approval.';
+        } elseif ($penempatan->status === 'rejected') {
+            $bolehAbsen = false;
+            $pesanLock = 'Pengajuan magang Anda ditolak.';
+        } elseif (in_array($penempatan->status, ['approved', 'ongoing', 'completed'])) {
+            $bolehAbsen = true;
+        }
+        
+        if (!$bolehAbsen) {
+            return view('siswa.riwayat.nilai-teknis', compact('penempatan', 'bolehAbsen', 'pesanLock'));
+        }
+        
+        $nilai = $penempatan->nilai;
+        
+        return view('siswa.riwayat.nilai-teknis', compact('nilai', 'penempatan', 'bolehAbsen', 'pesanLock'));
     }
 }

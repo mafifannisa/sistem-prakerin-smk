@@ -2,22 +2,11 @@
 
 @section('title', 'Tracking Surat')
 
-@section('content')
-<!-- Top Header -->
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Tracking Surat</h1>
-            <p class="text-sm text-gray-500 mt-1">Pantau status dan riwayat pengiriman surat</p>
-        </div>
-        <div class="text-sm text-gray-600">
-            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
-        </div>
-    </div>
-</header>
+@section('header_breadcrumb', 'Cetak Surat')
+@section('header_title', 'TRACKING SURAT')
 
-<!-- Main Content -->
-<div class="p-8">
+@section('content')
+<div class="p-0">
     
     <!-- Search & Filter -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">

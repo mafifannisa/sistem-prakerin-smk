@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Models\PenempatanMagang;
 use App\Models\SuratKeluar;
+use App\Models\LaporanPKL;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -151,41 +152,28 @@ public function downloadBukuPanduan()
     public function downloadSertifikat()
     {
         $siswaId = session('siswa_id');
-        $siswa = Siswa::with(['jurusan', 'penempatanMagangs.industri'])->find($siswaId);
+        $siswa = Siswa::with(['jurusan', 'penempatanMagangs.industri', 'penempatanMagangs.nilai', 'penempatanMagangs.sertifikat'])->find($siswaId);
         
         if (!$siswa) {
             return redirect()->back()->with('error', 'Data siswa tidak ditemukan!');
         }
         
         $penempatan = $siswa->penempatanMagangs->first();
-        
-        // Cek apakah sudah selesai magang dan laporan disetujui
+
+        // Cek apakah siswa memiliki penempatan magang
         $bolehDownload = false;
-        if ($penempatan && $penempatan->status === 'completed') {
-            $laporan = LaporanPKL::where('siswa_id', $siswaId)->where('status', 'disetujui')->first();
-            if ($laporan) {
-                $bolehDownload = true;
-            }
+        if ($penempatan) {
+            $bolehDownload = true;
         }
         
-        // Data nilai (dari database atau dummy untuk sementara)
-        $nilai = [
-            'kedisiplinan' => 90,
-            'kerja_sama' => 85,
-            'inisiatif' => 88,
-            'keahlian_kompetensi' => 92,
-            'rata_rata' => 88.75,
-            'predikat' => 'Sangat Baik',
-        ];
-        
-        return view('siswa.download-sertifikat', compact('siswa', 'penempatan', 'nilai', 'bolehDownload'));
+        return view('siswa.download-sertifikat', compact('siswa', 'penempatan', 'bolehDownload'));
     }
 
     // Generate Sertifikat PDF
     public function generateSertifikatPDF()
     {
         $siswaId = session('siswa_id');
-        $siswa = Siswa::with(['jurusan', 'penempatanMagangs.industri'])->find($siswaId);
+        $siswa = Siswa::with(['jurusan', 'penempatanMagangs.industri', 'penempatanMagangs.nilai', 'penempatanMagangs.sertifikat'])->find($siswaId);
         
         if (!$siswa) {
             return redirect()->back()->with('error', 'Data siswa tidak ditemukan!');
@@ -193,31 +181,43 @@ public function downloadBukuPanduan()
         
         $penempatan = $siswa->penempatanMagangs->first();
         
-        if (!$penempatan || $penempatan->status !== 'completed') {
-            return redirect()->back()->with('error', 'Sertifikat belum tersedia!');
+        $bolehDownload = false;
+        if ($penempatan) {
+            $bolehDownload = true;
         }
         
-        $nilai = [
-            'kedisiplinan' => 90,
-            'kerja_sama' => 85,
-            'inisiatif' => 88,
-            'keahlian_kompetensi' => 92,
-            'rata_rata' => 88.75,
-            'predikat' => 'Sangat Baik',
-        ];
+        if (!$bolehDownload) {
+            return redirect()->back()->with('error', 'Sertifikat belum tersedia! Persyaratan belum terpenuhi.');
+        }
         
-        $data = [
-            'siswa' => $siswa,
-            'penempatan' => $penempatan,
-            'nilai' => $nilai,
-            'nomor_sertifikat' => 'SKL/' . $siswa->nisn . '/' . date('Y'),
-            'tanggal_terbit' => now(),
-        ];
+        if ($penempatan && $penempatan->sertifikat && $penempatan->sertifikat->file_path) {
+            $savedPath = storage_path('app/public/' . $penempatan->sertifikat->file_path);
+            if (file_exists($savedPath)) {
+                return response()->download($savedPath, 'Sertifikat_Prakerin_' . $siswa->nisn . '.pdf');
+            }
+        }
         
-        $pdf = Pdf::loadView('pdf.sertifikat', $data);
+        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan'));
         $pdf->setPaper('A4', 'landscape');
         
         return $pdf->download('Sertifikat_Prakerin_' . $siswa->nisn . '.pdf');
+    }
+
+    public function publicDownloadSertifikat($id)
+    {
+        $penempatan = PenempatanMagang::with(['siswa.jurusan', 'industri', 'nilai', 'sertifikat'])->findOrFail($id);
+        
+        if ($penempatan->sertifikat && $penempatan->sertifikat->file_path) {
+            $savedPath = storage_path('app/public/' . $penempatan->sertifikat->file_path);
+            if (file_exists($savedPath)) {
+                return response()->file($savedPath);
+            }
+        }
+        
+        $pdf = Pdf::loadView('pdf.sertifikat-magang', compact('penempatan'));
+        $pdf->setPaper('A4', 'landscape');
+        
+        return $pdf->stream('Sertifikat_Prakerin_' . $penempatan->siswa->nisn . '.pdf');
     }
 
     public function downloadSurat($id)

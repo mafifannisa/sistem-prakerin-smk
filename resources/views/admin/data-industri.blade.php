@@ -2,22 +2,11 @@
 
 @section('title', 'Data Industri')
 
-@section('content')
-<!-- Top Header -->
-<header class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Data Industri</h1>
-            <p class="text-sm text-gray-500 mt-1">Kelola data industri mitra prakerin SMK Negeri 3 Tuban</p>
-        </div>
-        <div class="text-sm text-gray-600">
-            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
-        </div>
-    </div>
-</header>
+@section('header_breadcrumb', 'Data Industri')
+@section('header_title', 'DATA INDUSTRI')
 
-<!-- Main Content -->
-<div class="p-8">
+@section('content')
+<div class="p-0">
     <!-- Alert Messages -->
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
@@ -153,6 +142,11 @@
                                             @endif
                                         </div>
                                     @endif
+                                    @if($industri->pembimbing_magang)
+                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                            <span class="text-xs font-semibold text-gray-700">Pembimbing: {{ $industri->pembimbing_magang }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
 
@@ -182,6 +176,7 @@
                                         '{{ $industri->website }}', 
                                         '{{ $industri->nama_hr }}',
                                         '{{ $industri->no_wa_hr }}',
+                                        '{{ $industri->pembimbing_magang }}',
                                         '{{ $industri->kategori }}',
                                         {{ $industri->kapasitas_magang }}
                                     )" 
@@ -343,6 +338,12 @@
                                 <input type="text" name="no_wa_hr" id="no_wa_hr" 
                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Pembimbing Magang</label>
+                                <input type="text" name="pembimbing_magang" id="pembimbing_magang" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -372,10 +373,10 @@ function openModal() {
 }
 
 // ✅ PERBAIKAN: Parameter sesuai urutan database (id, nib, nama, alamat, ...)
-function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, kodePos, noTelp, email, website, namaHr, noWaHr, kategori, kapasitasMagang) {
+function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang) {
     console.log('Edit Industri:', {
         id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, 
-        kodePos, noTelp, email, website, namaHr, noWaHr, kategori, kapasitasMagang
+        kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang
     });
     
     document.getElementById('modalTitle').textContent = 'Edit Industri';
@@ -394,6 +395,7 @@ function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provins
     document.getElementById('website').value = website || '';
     document.getElementById('nama_hr').value = namaHr || '';
     document.getElementById('no_wa_hr').value = noWaHr || '';
+    document.getElementById('pembimbing_magang').value = pembimbingMagang || '';
     document.getElementById('kategori').value = kategori || '';
     document.getElementById('kapasitas_magang').value = kapasitasMagang || '';
     

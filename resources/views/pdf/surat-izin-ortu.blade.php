@@ -7,7 +7,7 @@
         body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; margin: 2cm; }
         .header { text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 30px; }
         .content table { width: 100%; margin-bottom: 20px; }
-        .footer { float: right; width: 250px; margin-top: 50px; }
+        .footer { float: right; width: 200px; margin-top: 50px; }
     </style>
 </head>
 <body>
@@ -26,7 +26,7 @@
         <table>
             <tr><td width="150">Nama Siswa</td><td width="10">:</td><td><strong>{{ $siswa->nama }}</strong></td></tr>
             <tr><td>NISN</td><td>:</td><td>{{ $siswa->nisn }}</td></tr>
-            <tr><td>Kelas / Jurusan</td><td>:</td><td>{{ $siswa->kelas }} / {{ $siswa->jurusan->nama_jurusan }}</td></tr>
+            <tr><td>Kelas / Jurusan</td><td>:</td><td>{{ $siswa->kelas->nama_kelas ?? '-' }} / {{ $siswa->jurusan->nama_jurusan }}</td></tr>
         </table>
 
         <p>Menyatakan **MEMBERIKAN IZIN** kepada putra/putri kami untuk melaksanakan Praktik Kerja Industri (Prakerin) di <strong>{{ $penempatan->industri->nama_industri ?? '................................' }}</strong> selama periode yang telah ditentukan oleh sekolah.</p>
