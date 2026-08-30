@@ -49,6 +49,9 @@ class UserSeeder extends Seeder
             ]
         );
 
+        $rplJurusan = \App\Models\Jurusan::where('kode_jurusan', 'RPL')->first();
+        $rplJurusanId = $rplJurusan ? $rplJurusan->id : null;
+
         // Guru Pembimbing Default
         $guruUser = User::firstOrCreate(
             ['username' => 'guru'],
@@ -66,7 +69,7 @@ class UserSeeder extends Seeder
             [
                 'nip' => '198001012010011001',
                 'nama' => 'Guru Pembimbing Prakerin',
-                'jurusan_id' => 4, // RPL
+                'jurusan_id' => $rplJurusanId,
                 'no_telp' => '081234567893',
                 'jabatan' => 'guru_pembimbing',
                 'is_active' => true,
@@ -90,7 +93,7 @@ class UserSeeder extends Seeder
             [
                 'nip' => '198001022010011002',
                 'nama' => 'Kepala Jurusan RPL',
-                'jurusan_id' => 4, // RPL
+                'jurusan_id' => $rplJurusanId,
                 'no_telp' => '081234567894',
                 'jabatan' => 'kepala_jurusan',
                 'is_active' => true,

@@ -1,50 +1,54 @@
 @echo off
+setlocal enabledelayedexpansion
+
 echo ===================================================
-echo     SETUP SISTEM PRAKERIN SMK NEGERI 3 TUBAN
+echo     SETUP SISTEM PRAKERIN SMK NEGERI 3 TUBAN (LOCAL)
 echo ===================================================
 echo.
 
-:: 1. Copy .env
+:: 1. Copy .env jika belum ada
 if not exist .env (
-    echo [1/6] Copying .env.example to .env...
-    copy .env.example .env
+    echo [1/6] Menyalin .env.example ke .env...
+    copy .env.example .env >nul
+    set FIRST_TIME=1
 ) else (
-    echo [1/6] .env already exists. Skipping...
+    echo [1/6] File .env sudah ada. Melanjutkan...
+    set FIRST_TIME=0
 )
 
 :: 2. Install Composer dependencies
-echo [2/6] Installing PHP dependencies via Composer...
-call composer install --optimize-autoloader --no-dev
+echo [2/6] Menginstall PHP dependencies via Composer...
+call composer install --no-interaction
 
 :: 3. Generate App Key
-echo [3/6] Generating Application Key...
+echo [3/6] Menyiapkan Application Key...
 call php artisan key:generate
 
 :: 4. Run Migrations & Seeders
-echo [4/6] Running database migrations and seeders...
-echo IMPORTANT: Make sure your MySQL is running and the database specified in .env exists!
+echo [4/6] Menjalankan Database Migrations ^& Seeders...
+echo PENTING: Pastikan MySQL (Laragon/XAMPP) sudah aktif dan database di .env sudah dibuat.
 call php artisan migrate --seed --force
 
 :: 5. Install NPM dependencies & Build Assets
-echo [5/6] Building Frontend Assets (Vite/Tailwind)...
+echo [5/6] Membangun Frontend Assets (Vite/Tailwind)...
 call npm install
 call npm run build
 
 :: 6. Create Storage Link
-echo [6/6] Creating storage link...
+echo [6/6] Menghubungkan storage (storage:link)...
 call php artisan storage:link
 
-:: 7. Optimize Cache
-echo Optimizing application...
+:: 7. Clear Cache for Local Development
+echo Membersihkan cache aplikasi untuk development...
 call php artisan optimize:clear
-call php artisan config:cache
-call php artisan route:cache
-call php artisan view:cache
 
 echo.
 echo ===================================================
-echo SETUP COMPLETED SUCCESSFULLY!
-echo You can now access the application via Laragon or run:
-echo php artisan serve
+echo ✅ SETUP LOKAL SELESAI DENGAN SUKSES!
+echo ===================================================
+echo Untuk mulai menjalankan aplikasi:
+echo   1. Akses melalui Laragon (Virtual Host / Localhost)
+echo   ATAU
+echo   2. Jalankan perintah: php artisan serve
 echo ===================================================
 pause

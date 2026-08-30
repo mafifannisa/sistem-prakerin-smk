@@ -16,7 +16,6 @@ return new class extends Migration
             $table->decimal('nilai_foto_word', 5, 2)->nullable()->after('nilai_disposisi_excel');
             $table->decimal('nilai_background_foto', 5, 2)->nullable()->after('nilai_foto_word');
             $table->string('foto_nilai', 255)->nullable()->after('nilai_background_foto');
-            $table->foreignId('input_by')->nullable()->change();
         });
     }
 
@@ -27,7 +26,6 @@ return new class extends Migration
     {
         Schema::table('nilais', function (Blueprint $table) {
             $table->dropColumn(['nilai_disposisi_excel', 'nilai_foto_word', 'nilai_background_foto', 'foto_nilai']);
-            $table->foreignId('input_by')->nullable(false)->change();
         });
     }
 };

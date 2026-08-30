@@ -27,10 +27,12 @@ return new class extends Migration
             'completed', 
             'cancelled'
         ])->default('pending');
+        $table->text('alasan_penolakan')->nullable();
         $table->string('posisi_magang')->nullable();
         $table->text('catatan_industri')->nullable();
         $table->date('tanggal_approval')->nullable();
         $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
+        $table->foreignId('guru_pembimbing_id')->nullable()->constrained('users')->onDelete('set null');
         $table->timestamps();
     });
     }

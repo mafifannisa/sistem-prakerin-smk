@@ -21,7 +21,7 @@ return new class extends Migration
         $table->enum('predikat', ['A', 'B', 'C', 'D', 'E'])->nullable();
         $table->text('catatan_penguji')->nullable();
         $table->date('tanggal_input')->nullable();
-        $table->foreignId('input_by')->constrained('users')->onDelete('cascade');
+        $table->foreignId('input_by')->nullable()->constrained('users')->onDelete('cascade');
         $table->timestamps();
     });
     }
