@@ -76,7 +76,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppTheme.emerald.withOpacity(0.15),
+                  backgroundColor: AppTheme.emerald.withValues(alpha: 0.15),
                   child: Text(
                     widget.user.nama.isNotEmpty ? widget.user.nama[0] : 'S',
                     style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.emerald, fontSize: 18),
@@ -121,7 +121,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryNavy.withOpacity(0.2),
+                    color: AppTheme.primaryNavy.withValues(alpha: 0.2),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -212,7 +212,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: Colors.black.withValues(alpha: 0.02),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -226,7 +226,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppTheme.indigo.withOpacity(0.1),
+                          color: AppTheme.indigo.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.business_rounded, color: AppTheme.indigo),
@@ -290,7 +290,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Center(
               child: CircleAvatar(
                 radius: 40,
-                backgroundColor: AppTheme.emerald.withOpacity(0.15),
+                backgroundColor: AppTheme.emerald.withValues(alpha: 0.15),
                 child: const Icon(Icons.person, size: 48, color: AppTheme.emerald),
               ),
             ),

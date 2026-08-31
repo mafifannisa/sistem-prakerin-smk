@@ -106,7 +106,7 @@ class _LiveRadarAttendancePageState extends State<LiveRadarAttendancePage> {
                               point: LatLng(industriLat, industriLng),
                               radius: industriRadius.toDouble(),
                               useRadiusInMeter: true,
-                              color: AppTheme.emerald.withOpacity(0.18),
+                              color: AppTheme.emerald.withValues(alpha: 0.18),
                               borderColor: AppTheme.emerald,
                               borderStrokeWidth: 2,
                             ),
