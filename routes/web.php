@@ -222,6 +222,8 @@ Route::middleware(['role:guru_pembimbing'])->prefix('guru-pembimbing')->group(fu
     Route::get('/dashboard', [\App\Http\Controllers\GuruPembimbingController::class, 'dashboard'])->name('guru_pembimbing.dashboard');
     Route::get('/data-siswa', [\App\Http\Controllers\GuruPembimbingController::class, 'dataSiswa'])->name('guru_pembimbing.data-siswa');
     Route::get('/rekap-absen', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapAbsen'])->name('guru_pembimbing.rekap-absen');
+    Route::get('/rekap-koreksi', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapKoreksi'])->name('guru_pembimbing.rekap-koreksi');
+    Route::post('/rekap-koreksi/{id}/verify', [\App\Http\Controllers\GuruPembimbingController::class, 'verifyKoreksi'])->name('guru_pembimbing.rekap-koreksi.verify');
     Route::get('/rekap-jurnal', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapJurnal'])->name('guru_pembimbing.rekap-jurnal');
     Route::post('/rekap-jurnal/{id}/verify', [\App\Http\Controllers\GuruPembimbingController::class, 'verifyJurnal'])->name('guru_pembimbing.rekap-jurnal.verify');
     Route::get('/rekap-laporan', [\App\Http\Controllers\GuruPembimbingController::class, 'rekapLaporan'])->name('guru_pembimbing.rekap-laporan');

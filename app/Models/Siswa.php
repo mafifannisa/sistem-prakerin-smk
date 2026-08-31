@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Siswa extends Model
+class Siswa extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory;
 
     protected $table = 'siswas';
 
@@ -24,16 +25,24 @@ class Siswa extends Model
         'nama_wali',
         'no_wa_wali',
         'password',
+        'device_id',
+        'device_model',
+        'fcm_token',
+        'is_face_enrolled',
+        'foto_master_wajah',
+        'face_embedding_json',
         'is_active',
     ];
 
     protected $hidden = [
         'password',
+        'face_embedding_json',
     ];
 
     protected $casts = [
         'tanggal_lahir' => 'date',
         'is_active' => 'boolean',
+        'is_face_enrolled' => 'boolean',
     ];
 
     // Relasi: Siswa punya 1 kelas
@@ -52,6 +61,24 @@ class Siswa extends Model
     public function penempatanMagangs()
     {
         return $this->hasMany(PenempatanMagang::class);
+    }
+
+    // Relasi: Siswa punya banyak absensi
+    public function absensis()
+    {
+        return $this->hasMany(Absensi::class);
+    }
+
+    // Relasi: Siswa punya banyak jurnal harian
+    public function jurnalHarians()
+    {
+        return $this->hasMany(JurnalHarian::class);
+    }
+
+    // Relasi: Siswa punya banyak koreksi absensi
+    public function koreksiAbsensis()
+    {
+        return $this->hasMany(KoreksiAbsensi::class);
     }
 
     // Relasi: Siswa punya banyak log_wa
@@ -75,7 +102,7 @@ class Siswa extends Model
     // Helper: Get usia
     public function getUsiaAttribute()
     {
-        return $this->tanggal_lahir->age;
+        return $this->tanggal_lahir ? $this->tanggal_lahir->age : null;
     }
 
     // Helper: Get nama lengkap dengan NISN

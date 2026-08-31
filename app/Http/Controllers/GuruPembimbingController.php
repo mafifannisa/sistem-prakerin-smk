@@ -249,4 +249,75 @@ class GuruPembimbingController extends Controller
 
         return redirect()->back()->with('success', 'Laporan masalah berhasil dikirimkan ke Kepala Jurusan.');
     }
+
+    public function rekapKoreksi(Request $request)
+    {
+        $placements = $this->getBimbinganPlacements();
+        $placementIds = $placements->pluck('id');
+
+        $query = \App\Models\KoreksiAbsensi::with(['siswa.kelas', 'penempatanMagang.industri'])
+            ->whereIn('penempatan_magang_id', $placementIds);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $koreksis = $query->latest()->paginate(10);
+
+        return view('guru_pembimbing.rekap-koreksi', compact('koreksis'));
+    }
+
+    public function verifyKoreksi(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:disetujui,ditolak',
+            'catatan_pembimbing' => 'nullable|string|max:500',
+        ]);
+
+        $placements = $this->getBimbinganPlacements();
+        $placementIds = $placements->pluck('id');
+
+        $koreksi = \App\Models\KoreksiAbsensi::whereIn('penempatan_magang_id', $placementIds)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $koreksi->update([
+            'status' => $request->status,
+            'catatan_pembimbing' => $request->catatan_pembimbing,
+            'disetujui_oleh' => auth()->id(),
+            'disetujui_pada' => now(),
+        ]);
+
+        if ($request->status === 'disetujui') {
+            $absensi = Absensi::where('siswa_id', $koreksi->siswa_id)
+                ->whereDate('tanggal', $koreksi->tanggal)
+                ->first();
+
+            if (!$absensi) {
+                Absensi::create([
+                    'siswa_id' => $koreksi->siswa_id,
+                    'penempatan_magang_id' => $koreksi->penempatan_magang_id,
+                    'tanggal' => $koreksi->tanggal,
+                    'status' => 'hadir',
+                    'jam_masuk' => $koreksi->jam_diajukan,
+                    'keterangan' => 'Disahkan via Koreksi Darurat (Disetujui: ' . auth()->user()->nama_lengkap . ')',
+                    'bukti_foto' => $koreksi->bukti_lampiran,
+                ]);
+            } else {
+                $updateData = ['status' => 'hadir'];
+                if ($koreksi->jenis_koreksi === 'masuk') {
+                    $updateData['jam_masuk'] = $koreksi->jam_diajukan;
+                } elseif ($koreksi->jenis_koreksi === 'pulang') {
+                    $updateData['jam_pulang'] = $koreksi->jam_diajukan;
+                } else {
+                    $updateData['jam_masuk'] = $koreksi->jam_diajukan;
+                    $updateData['jam_pulang'] = '16:00:00';
+                }
+                $updateData['keterangan'] = 'Diperbarui via Koreksi Darurat (Disetujui: ' . auth()->user()->nama_lengkap . ')';
+                $absensi->update($updateData);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Status koreksi presensi siswa berhasil diperbarui.');
+    }
 }

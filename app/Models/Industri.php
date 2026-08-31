@@ -21,6 +21,11 @@ class Industri extends Model
         'no_telp',
         'email',
         'website',
+        'latitude',
+        'longitude',
+        'radius_toleransi_meter',
+        'jam_masuk',
+        'jam_pulang',
         'nama_hr',
         'no_wa_hr',
         'pembimbing_magang',
@@ -32,12 +37,21 @@ class Industri extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'kapasitas_magang' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'radius_toleransi_meter' => 'integer',
     ];
 
     // Relasi: Industri punya banyak penempatan_magang
     public function penempatanMagangs()
     {
         return $this->hasMany(PenempatanMagang::class);
+    }
+
+    // Relasi: Industri punya banyak lokasi / sub-zona (Multi-Zone)
+    public function locations()
+    {
+        return $this->hasMany(IndustriLocation::class);
     }
 
     // Scope: Hanya industri aktif

@@ -179,6 +179,14 @@
                     <span class="font-semibold text-sm">Rekap Absen</span>
                 </a>
 
+                <a href="{{ route('guru_pembimbing.rekap-koreksi') }}" 
+                   class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-250 {{ request()->routeIs('guru_pembimbing.rekap-koreksi') ? 'sidebar-active' : 'text-gray-655 hover:bg-orange-50/50' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <span class="font-semibold text-sm">Koreksi Presensi</span>
+                </a>
+
                 <a href="{{ route('guru_pembimbing.rekap-jurnal') }}" 
                    class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-250 {{ request()->routeIs('guru_pembimbing.rekap-jurnal') ? 'sidebar-active' : 'text-gray-655 hover:bg-orange-50/50' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

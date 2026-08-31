@@ -164,21 +164,26 @@
                                     <button onclick="editIndustri(
                                         {{ $industri->id }}, 
                                         '{{ $industri->nib ?? '' }}', 
-                                        '{{ $industri->nama_industri }}', 
-                                        '{{ $industri->alamat }}', 
-                                        '{{ $industri->kelurahan }}',
-                                        '{{ $industri->kecamatan }}',
-                                        '{{ $industri->kota }}', 
-                                        '{{ $industri->provinsi }}',
-                                        '{{ $industri->kode_pos }}',
+                                        '{{ addslashes($industri->nama_industri) }}', 
+                                        '{{ addslashes($industri->alamat) }}', 
+                                        '{{ addslashes($industri->kelurahan ?? '') }}',
+                                        '{{ addslashes($industri->kecamatan ?? '') }}',
+                                        '{{ addslashes($industri->kota ?? '') }}', 
+                                        '{{ addslashes($industri->provinsi ?? '') }}',
+                                        '{{ $industri->kode_pos ?? '' }}',
                                         '{{ $industri->no_telp }}', 
-                                        '{{ $industri->email }}', 
-                                        '{{ $industri->website }}', 
-                                        '{{ $industri->nama_hr }}',
-                                        '{{ $industri->no_wa_hr }}',
-                                        '{{ $industri->pembimbing_magang }}',
-                                        '{{ $industri->kategori }}',
-                                        {{ $industri->kapasitas_magang }}
+                                        '{{ $industri->email ?? '' }}', 
+                                        '{{ $industri->website ?? '' }}', 
+                                        '{{ addslashes($industri->nama_hr ?? '') }}',
+                                        '{{ $industri->no_wa_hr ?? '' }}',
+                                        '{{ addslashes($industri->pembimbing_magang ?? '') }}',
+                                        '{{ $industri->kategori ?? '' }}',
+                                        {{ $industri->kapasitas_magang ?? 0 }},
+                                        '{{ $industri->latitude ?? '' }}',
+                                        '{{ $industri->longitude ?? '' }}',
+                                        '{{ $industri->radius_toleransi_meter ?? 300 }}',
+                                        '{{ $industri->jam_masuk ? substr($industri->jam_masuk, 0, 5) : '08:00' }}',
+                                        '{{ $industri->jam_pulang ? substr($industri->jam_pulang, 0, 5) : '16:00' }}'
                                     )" 
                                     class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold rounded-lg transition">
                                         Edit
@@ -348,6 +353,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Bagian 4: Titik Koordinat Geofencing & Jam Kerja (Mobile App) -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Pengaturan Geofencing & Jam Kerja (Presensi Mobile)
+                    </h4>
+                    <button type="button" onclick="getBrowserGps()" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg border border-emerald-300 transition flex items-center gap-1">
+                        📍 Ambil Lokasi Saat Ini (GPS)
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Latitude</label>
+                        <input type="number" step="any" name="latitude" id="latitude" placeholder="Misal: -6.894520"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Longitude</label>
+                        <input type="number" step="any" name="longitude" id="longitude" placeholder="Misal: 112.058340"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Radius Toleransi (Meter)</label>
+                        <input type="number" name="radius_toleransi_meter" id="radius_toleransi_meter" placeholder="300"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Jam Masuk</label>
+                        <input type="time" name="jam_masuk" id="jam_masuk" value="08:00"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Jam Pulang</label>
+                        <input type="time" name="jam_pulang" id="jam_pulang" value="16:00"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                    </div>
+                </div>
+            </div>
             
             <div class="flex items-center justify-end gap-3 mt-8 pt-4 border-t">
                 <button type="button" onclick="closeModal()" 
@@ -373,10 +422,11 @@ function openModal() {
 }
 
 // ✅ PERBAIKAN: Parameter sesuai urutan database (id, nib, nama, alamat, ...)
-function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang) {
+function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang, lat, lng, radius, jamMasuk, jamPulang) {
     console.log('Edit Industri:', {
         id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, 
-        kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang
+        kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang,
+        lat, lng, radius, jamMasuk, jamPulang
     });
     
     document.getElementById('modalTitle').textContent = 'Edit Industri';
@@ -398,6 +448,11 @@ function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provins
     document.getElementById('pembimbing_magang').value = pembimbingMagang || '';
     document.getElementById('kategori').value = kategori || '';
     document.getElementById('kapasitas_magang').value = kapasitasMagang || '';
+    document.getElementById('latitude').value = lat || '';
+    document.getElementById('longitude').value = lng || '';
+    document.getElementById('radius_toleransi_meter').value = radius || 300;
+    document.getElementById('jam_masuk').value = jamMasuk || '08:00';
+    document.getElementById('jam_pulang').value = jamPulang || '16:00';
     
     // Set method dan action
     const form = document.getElementById('industriForm');
@@ -408,10 +463,34 @@ function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provins
     const actionUrl = "{{ route('admin.data-industri.update', ':id') }}".replace(':id', id);
     form.action = actionUrl;
     
-    console.log('Form Action:', form.action);
-    console.log('Form Method:', hiddenMethod.value);
-    
     document.getElementById('industriModal').classList.remove('hidden');
+}
+
+function getBrowserGps() {
+    if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung Geolocation.');
+        return;
+    }
+    
+    const btn = event.target;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '⏳ Mengambil Lokasi...';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            document.getElementById('latitude').value = position.coords.latitude.toFixed(8);
+            document.getElementById('longitude').value = position.coords.longitude.toFixed(8);
+            btn.innerHTML = '✅ Lokasi Terpasang!';
+            setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 2000);
+        },
+        function(error) {
+            alert('Gagal mengambil lokasi GPS: ' + error.message);
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 }
 
 function closeModal() {

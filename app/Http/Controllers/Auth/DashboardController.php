@@ -401,6 +401,11 @@ class DashboardController extends Controller
             'pembimbing_magang' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:100',
             'kapasitas_magang' => 'nullable|integer',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'radius_toleransi_meter' => 'nullable|integer|min:50|max:5000',
+            'jam_masuk' => 'nullable',
+            'jam_pulang' => 'nullable',
         ]);
         
         \App\Models\Industri::create($validated);
@@ -429,6 +434,11 @@ class DashboardController extends Controller
             'pembimbing_magang' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:100',
             'kapasitas_magang' => 'nullable|integer',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'radius_toleransi_meter' => 'nullable|integer|min:50|max:5000',
+            'jam_masuk' => 'nullable',
+            'jam_pulang' => 'nullable',
         ]);
         
         $industri->update($validated);

@@ -9,7 +9,6 @@ class JurnalHarian extends Model
 {
     use HasFactory;
 
-    // ⬇️ TAMBAHKAN BARIS INI ⬇️
     protected $table = 'jurnal_harians';
 
     protected $fillable = [
@@ -27,6 +26,8 @@ class JurnalHarian extends Model
 
     protected $casts = [
         'tanggal' => 'date',
+        'minggu_ke' => 'integer',
+        'durasi_jam' => 'integer',
     ];
 
     public function siswa()
@@ -42,5 +43,11 @@ class JurnalHarian extends Model
     public function disetujuiOleh()
     {
         return $this->belongsTo(User::class, 'disetujui_oleh');
+    }
+
+    // Relasi: 1 jurnal bisa memiliki banyak foto dokumentasi
+    public function fotos()
+    {
+        return $this->hasMany(JurnalFoto::class);
     }
 }
