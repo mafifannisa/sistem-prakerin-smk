@@ -113,6 +113,8 @@ Route::middleware(['role:admin'])->prefix('admin')->group(function () {
     // DATA GURU
     Route::get('/data-guru', [DashboardController::class, 'dataGuru'])->name('admin.data-guru');
     Route::post('/data-guru', [DashboardController::class, 'storeGuru'])->name('admin.data-guru.store');
+    Route::post('/data-guru/import', [DashboardController::class, 'importGuru'])->name('admin.data-guru.import');
+    Route::get('/data-guru/template', [DashboardController::class, 'downloadTemplateGuru'])->name('admin.data-guru.template');
     Route::put('/data-guru/{id}', [DashboardController::class, 'updateGuru'])->name('admin.data-guru.update');
     Route::delete('/data-guru/{id}', [DashboardController::class, 'deleteGuru'])->name('admin.data-guru.delete');
 

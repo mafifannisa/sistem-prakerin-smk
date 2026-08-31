@@ -2443,6 +2443,137 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Data guru berhasil dihapus.');
     }
 
+    public function importGuru(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            $file = $request->file('file_excel');
+
+            $nama_file = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('temp'), $nama_file);
+            
+            $path_lengkap = public_path('temp/' . $nama_file);
+
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\GuruImport, $path_lengkap);
+
+            if (file_exists($path_lengkap)) {
+                unlink($path_lengkap);
+            }
+
+            $stats = session('import_stats');
+            $sukses = $stats['success'] ?? 0;
+            $skip = $stats['skipped'] ?? 0;
+
+            return redirect()->back()->with('success', "Import Selesai! Berhasil masuk: $sukses data. Dilewati: $skip data (karena duplikasi NIP/Username/Email).");
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            return redirect()->back()->with('error', 'Format isi excel ada yang salah atau tidak sesuai template.');
+        } catch (\Exception $e) {
+            if (isset($path_lengkap) && file_exists($path_lengkap)) {
+                unlink($path_lengkap);
+            }
+            return redirect()->back()->with('error', 'Kesalahan Sistem: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplateGuru()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Data Guru');
+
+        // Header
+        $headers = [
+            'A1' => 'nama',
+            'B1' => 'nip',
+            'C1' => 'jabatan',
+            'D1' => 'username',
+            'E1' => 'email',
+            'F1' => 'password',
+            'G1' => 'no_telp',
+            'H1' => 'jurusan',
+            'I1' => 'kelas',
+        ];
+
+        foreach ($headers as $cell => $label) {
+            $sheet->setCellValue($cell, $label);
+        }
+
+        // Header Style (Green theme with white text)
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '16A34A'], // Emerald / Green 600
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+        $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(24);
+
+        // Format kolom NIP & No Telp sebagai teks agar tidak truncated / scientific notation
+        $sheet->getStyle('B')->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
+        $sheet->getStyle('G')->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
+
+        // Contoh Data 1 (Guru Pembimbing)
+        $sheet->setCellValue('A2', 'Budi Santoso, S.Kom');
+        $sheet->setCellValueExplicit('B2', '198501012010011001', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('C2', 'guru_pembimbing');
+        $sheet->setCellValue('D2', 'budi.santoso');
+        $sheet->setCellValue('E2', 'budi@guru.com');
+        $sheet->setCellValue('F2', 'guru123');
+        $sheet->setCellValueExplicit('G2', '081234567890', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('H2', 'RPL');
+        $sheet->setCellValue('I2', 'XII RPL 1');
+
+        // Contoh Data 2 (Kepala Jurusan)
+        $sheet->setCellValue('A3', 'Siti Aminah, M.Pd');
+        $sheet->setCellValueExplicit('B3', '198205122008012003', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('C3', 'kepala_jurusan');
+        $sheet->setCellValue('D3', 'siti.aminah');
+        $sheet->setCellValue('E3', 'siti@guru.com');
+        $sheet->setCellValue('F3', 'guru123');
+        $sheet->setCellValueExplicit('G3', '081234567891', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('H3', 'TKJ');
+        $sheet->setCellValue('I3', '');
+
+        // Contoh Data 3 (Guru Penguji)
+        $sheet->setCellValue('A4', 'Ahmad Fauzi, S.T');
+        $sheet->setCellValueExplicit('B4', '199003152015021002', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('C4', 'guru_penguji');
+        $sheet->setCellValue('D4', 'ahmad.fauzi');
+        $sheet->setCellValue('E4', 'ahmad@guru.com');
+        $sheet->setCellValue('F4', 'guru123');
+        $sheet->setCellValueExplicit('G4', '081234567892', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValue('H4', 'DKV');
+        $sheet->setCellValue('I4', '');
+
+        // Auto width untuk semua kolom A sampai I
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Template_Import_Guru.xlsx';
+        $tempPath = storage_path('app/temp/');
+        if (!file_exists($tempPath)) {
+            mkdir($tempPath, 0755, true);
+        }
+        $writer->save($tempPath . $filename);
+
+        return response()->download($tempPath . $filename)->deleteFileAfterSend();
+    }
+
     public function adminDataMagang(Request $request)
     {
         $query = \App\Models\PenempatanMagang::with(['siswa.jurusan', 'siswa.kelas', 'industri', 'guruPembimbing']);

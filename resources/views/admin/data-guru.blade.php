@@ -48,10 +48,16 @@
                 </a>
             </form>
             
-            <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Tambah Guru
-            </button>
+            <div class="flex items-center gap-2.5">
+                <button onclick="openImportModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Import Excel
+                </button>
+                <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Guru
+                </button>
+            </div>
         </div>
     </div>
 
@@ -142,6 +148,72 @@
 @endsection
 
 @section('modals')
+<!-- Modal Import Excel Data Guru (Centered & Elevated UI/UX) -->
+<div id="importModal" class="fixed inset-0 z-[100] hidden bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div id="importModalContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-95 opacity-0 border border-gray-100 flex flex-col my-auto">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-green-50/70 via-emerald-50/40 to-white flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-green-600 flex items-center justify-center text-white shadow-md shadow-green-500/20 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800 tracking-tight">Import Data Guru</h3>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Upload spreadsheet (.xlsx / .xls / .csv)</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeImportModal()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 rounded-full transition border border-gray-200/60 shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <form action="{{ route('admin.data-guru.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 m-0">
+            @csrf
+            <!-- Download Template Banner -->
+            <div class="flex items-center justify-between bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/80">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-800">Template Format Excel</p>
+                        <p class="text-[10px] text-gray-500 font-medium">Unduh format resmi dengan contoh data</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.data-guru.template') }}" class="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 shadow-sm transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download
+                </a>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Upload File Excel / CSV yang Sudah Diisi <span class="text-red-500">*</span></label>
+                <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer">
+                
+                <div class="mt-3.5 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/80 space-y-2 text-[11px] text-gray-600 leading-relaxed">
+                    <p class="font-bold text-gray-800 flex items-center gap-1.5">
+                        <span>📋</span> Kolom Header Excel:
+                    </p>
+                    <div class="font-mono text-[10px] bg-white p-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold break-words">
+                        nama, nip, jabatan, username, email, password, no_telp, jurusan, kelas
+                    </div>
+                    <ul class="list-disc list-inside space-y-0.5 text-gray-500 pt-0.5">
+                        <li><span class="font-bold text-gray-700">Pilihan Jabatan:</span> <code>guru_pembimbing</code>, <code>kepala_jurusan</code>, <code>guru_penguji</code></li>
+                        <li><span class="font-bold text-gray-700">Password default:</span> NIP (atau <code>guru123</code>)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onclick="closeImportModal()" class="px-5 py-2.5 bg-white border border-gray-250 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition shadow-sm">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-md shadow-green-500/20 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Mulai Import
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Form Guru (Centered & Elevated UI/UX) -->
 <div id="guruModal" class="fixed inset-0 z-[100] hidden bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div id="guruModalContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0 border border-gray-100 flex flex-col max-h-[92vh] my-auto">
@@ -356,6 +428,31 @@ function closeModal() {
     }, 200);
 }
 
+function openImportModal() {
+    const modal = document.getElementById('importModal');
+    const content = document.getElementById('importModalContent');
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeImportModal() {
+    const modal = document.getElementById('importModal');
+    const content = document.getElementById('importModalContent');
+    if (!modal || modal.classList.contains('hidden')) return;
+    
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }, 200);
+}
+
 function deleteGuru(id, nama) {
     if (confirm(`Apakah Anda yakin ingin menghapus data guru "${nama}" beserta akun loginnya?`)) {
         const form = document.createElement('form');
@@ -369,6 +466,10 @@ function deleteGuru(id, nama) {
 
 document.getElementById('guruModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
+});
+
+document.getElementById('importModal').addEventListener('click', function(e) {
+    if (e.target === this) closeImportModal();
 });
 </script>
 @endsection
