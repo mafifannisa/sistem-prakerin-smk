@@ -217,195 +217,221 @@
         @endif
     </div>
 </div>
+@endsection
 
-<!-- Modal Tambah/Edit Industri -->
-<div id="industriModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-            <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Tambah Industri</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+@section('modals')
+<!-- Modal Tambah/Edit Industri (Centered & Elevated UI/UX) -->
+<div id="industriModal" class="fixed inset-0 z-[100] hidden bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div id="industriModalContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0 border border-gray-100 flex flex-col max-h-[92vh] my-auto">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 id="modalTitle" class="text-lg font-black text-gray-800 tracking-tight">Tambah Industri Baru</h3>
+                        <span id="modalModeBadge" class="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-blue-100 text-blue-700 tracking-wider">Baru</span>
+                    </div>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Kelola data mitra DU/DI, lokasi GPS absensi, dan kontak HR</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 rounded-full transition border border-gray-200/60 shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
-        
-        <form id="industriForm" method="POST" class="p-6">
+             <!-- Modal Form Body (Scrollable with proper padding) -->
+        <form id="industriForm" method="POST" class="flex flex-col flex-1 overflow-hidden m-0">
             @csrf
             <input type="hidden" id="industriId" name="_method" value="POST">
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Kolom 1: Informasi Dasar -->
-                <div class="space-y-4">
-                    <h4 class="font-semibold text-gray-700 border-b pb-2">Informasi Dasar</h4>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">NIB (Nomor Induk Berusaha) *</label>
-                        <input type="text" name="nib" id="nib" required 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Industri *</label>
-                        <input type="text" name="nama_industri" id="nama_industri" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
-                        <input type="text" name="kategori" id="kategori" placeholder="Contoh: Manufaktur, Jasa, dll"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kapasitas Magang</label>
-                        <input type="number" name="kapasitas_magang" id="kapasitas_magang" placeholder="Jumlah siswa"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                </div>
-
-                <!-- Kolom 2: Alamat Lengkap -->
-                <div class="space-y-4">
-                    <h4 class="font-semibold text-gray-700 border-b pb-2">Alamat Lengkap</h4>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Alamat Jalan *</label>
-                        <textarea name="alamat" id="alamat" rows="2" required 
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Kelurahan</label>
-                            <input type="text" name="kelurahan" id="kelurahan" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Kecamatan</label>
-                            <input type="text" name="kecamatan" id="kecamatan" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kota/Kabupaten *</label>
-                        <input type="text" name="kota" id="kota" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Provinsi *</label>
-                        <input type="text" name="provinsi" id="provinsi" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Pos</label>
-                        <input type="text" name="kode_pos" id="kode_pos" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                </div>
-
-                <!-- Kolom 3: Kontak & HR -->
-                <div class="space-y-4">
-                    <h4 class="font-semibold text-gray-700 border-b pb-2">Kontak & HR</h4>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">No. Telepon Industri *</label>
-                        <input type="text" name="no_telp" id="no_telp" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="email" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Website</label>
-                        <input type="text" name="website" id="website" placeholder="https://www.sukamakmur.co.id"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    
-                    <div class="pt-4 border-t">
-                        <p class="text-sm font-semibold text-gray-700 mb-3">Kontak HRD/Personalia</p>
+            <div class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 text-sm">
+                <!-- 3-Column Card Layout -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Kolom 1: Informasi Dasar -->
+                    <div class="space-y-3.5 bg-gray-50/60 p-5 rounded-2xl border border-gray-200/70">
+                        <h4 class="font-black text-gray-800 text-xs uppercase tracking-wider pb-2 border-b border-gray-200 flex items-center gap-2">
+                            <span>🏢</span> Informasi Dasar
+                        </h4>
                         
-                        <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">NIB (Nomor Induk Berusaha) <span class="text-red-500">*</span></label>
+                            <input type="text" name="nib" id="nib" required placeholder="123456789..."
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold transition">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Industri <span class="text-red-500">*</span></label>
+                            <input type="text" name="nama_industri" id="nama_industri" required placeholder="PT. Suka Makmur"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold text-gray-800 transition">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Bidang</label>
+                            <input type="text" name="kategori" id="kategori" placeholder="Contoh: Manufaktur, IT, Jasa"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kapasitas Kuota Magang</label>
+                            <input type="number" name="kapasitas_magang" id="kapasitas_magang" placeholder="Jumlah siswa"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                        </div>
+                    </div>
+
+                    <!-- Kolom 2: Alamat Lengkap -->
+                    <div class="space-y-3.5 bg-gray-50/60 p-5 rounded-2xl border border-gray-200/70">
+                        <h4 class="font-black text-gray-800 text-xs uppercase tracking-wider pb-2 border-b border-gray-200 flex items-center gap-2">
+                            <span>📍</span> Lokasi & Domisili
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Jalan <span class="text-red-500">*</span></label>
+                            <textarea name="alamat" id="alamat" rows="2" required placeholder="Jl. Raya Industri No. 1..."
+                                      class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2.5">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama HR</label>
-                                <input type="text" name="nama_hr" id="nama_hr" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Kelurahan</label>
+                                <input type="text" name="kelurahan" id="kelurahan" placeholder="Karangrejo"
+                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Kecamatan</label>
+                                <input type="text" name="kecamatan" id="kecamatan" placeholder="Kerek"
+                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Kota/Kab. <span class="text-red-500">*</span></label>
+                                <input type="text" name="kota" id="kota" required placeholder="Tuban"
+                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Provinsi <span class="text-red-500">*</span></label>
+                                <input type="text" name="provinsi" id="provinsi" required placeholder="Jawa Timur"
+                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kode Pos</label>
+                            <input type="text" name="kode_pos" id="kode_pos" placeholder="62354"
+                                   class="w-full px-3.5 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
+                        </div>
+                    </div>
+
+                    <!-- Kolom 3: Kontak & HR -->
+                    <div class="space-y-3.5 bg-gray-50/60 p-5 rounded-2xl border border-gray-200/70">
+                        <h4 class="font-black text-gray-800 text-xs uppercase tracking-wider pb-2 border-b border-gray-200 flex items-center gap-2">
+                            <span>📞</span> Kontak & Personalia
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">No. Telp Perusahaan <span class="text-red-500">*</span></label>
+                            <input type="text" name="no_telp" id="no_telp" required placeholder="0356-123456"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Email Resmi</label>
+                            <input type="email" name="email" id="email" placeholder="hrd@sukamakmur.co.id"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Website</label>
+                            <input type="text" name="website" id="website" placeholder="www.sukamakmur.co.id"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                        </div>
+                        
+                        <div class="pt-2 border-t border-gray-200/80 space-y-2.5">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama HRD / PIC</label>
+                                <input type="text" name="nama_hr" id="nama_hr" placeholder="Bapak Hendra"
+                                       class="w-full px-3.5 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">No. WA HR</label>
-                                <input type="text" name="no_wa_hr" id="no_wa_hr" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">No. WhatsApp HR</label>
+                                <input type="text" name="no_wa_hr" id="no_wa_hr" placeholder="081234567901"
+                                       class="w-full px-3.5 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Pembimbing Magang</label>
-                                <input type="text" name="pembimbing_magang" id="pembimbing_magang" 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Pembimbing DU/DI</label>
+                                <input type="text" name="pembimbing_magang" id="pembimbing_magang" placeholder="Pembimbing Industri"
+                                       class="w-full px-3.5 py-2 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs transition">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Bagian 4: Titik Koordinat Geofencing & Jam Kerja (Mobile App) -->
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="font-semibold text-gray-800 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Pengaturan Geofencing & Jam Kerja (Presensi Mobile)
-                    </h4>
-                    <button type="button" onclick="getBrowserGps()" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg border border-emerald-300 transition flex items-center gap-1">
-                        📍 Ambil Lokasi Saat Ini (GPS)
-                    </button>
-                </div>
+                <!-- Bagian 4: Titik Koordinat Geofencing & Jam Kerja (Presensi Mobile) -->
+                <div class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-200/60 space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="p-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">Pengaturan Geofencing & Jam Presensi Mobile</h4>
+                                <p class="text-[11px] text-gray-500 font-medium">Validasi radius GPS dan jam kehadiran siswa di tempat magang</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="getBrowserGps()" class="px-3.5 py-2 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 shadow-sm transition flex items-center gap-1.5">
+                            📍 Ambil Lokasi Saat Ini (GPS)
+                        </button>
+                    </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Latitude</label>
-                        <input type="number" step="any" name="latitude" id="latitude" placeholder="Misal: -6.894520"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Longitude</label>
-                        <input type="number" step="any" name="longitude" id="longitude" placeholder="Misal: 112.058340"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Radius Toleransi (Meter)</label>
-                        <input type="number" name="radius_toleransi_meter" id="radius_toleransi_meter" placeholder="300"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Jam Masuk</label>
-                        <input type="time" name="jam_masuk" id="jam_masuk" value="08:00"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Jam Pulang</label>
-                        <input type="time" name="jam_pulang" id="jam_pulang" value="16:00"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Latitude</label>
+                            <input type="number" step="any" name="latitude" id="latitude" placeholder="-6.894520"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs font-mono transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Longitude</label>
+                            <input type="number" step="any" name="longitude" id="longitude" placeholder="112.058340"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs font-mono transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Radius Toleransi (Meter)</label>
+                            <input type="number" name="radius_toleransi_meter" id="radius_toleransi_meter" placeholder="300"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Jam Masuk</label>
+                            <input type="time" name="jam_masuk" id="jam_masuk" value="08:00"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs font-semibold transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Jam Pulang</label>
+                            <input type="time" name="jam_pulang" id="jam_pulang" value="16:00"
+                                   class="w-full px-3.5 py-2.5 bg-white border border-gray-250 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs font-semibold transition">
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="flex items-center justify-end gap-3 mt-8 pt-4 border-t">
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
                 <button type="button" onclick="closeModal()" 
-                        class="px-6 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+                        class="px-5 py-2.5 bg-white border border-gray-250 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition shadow-sm">
                     Batal
                 </button>
                 <button type="submit" 
-                        class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition">
-                    Simpan
+                        class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Simpan Data Industri
                 </button>
             </div>
         </form>
@@ -414,22 +440,38 @@
 
 <script>
 function openModal() {
-    document.getElementById('modalTitle').textContent = 'Tambah Industri';
+    const modal = document.getElementById('industriModal');
+    const content = document.getElementById('industriModalContent');
+    
+    document.getElementById('modalTitle').textContent = 'Tambah Industri Baru';
+    const badge = document.getElementById('modalModeBadge');
+    if (badge) {
+        badge.textContent = 'Baru';
+        badge.className = 'px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-blue-100 text-blue-700 tracking-wider';
+    }
+    
     document.getElementById('industriForm').reset();
     document.getElementById('industriId').value = 'POST';
     document.getElementById('industriForm').action = "{{ route('admin.data-industri') }}";
-    document.getElementById('industriModal').classList.remove('hidden');
+    
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
 }
 
-// ✅ PERBAIKAN: Parameter sesuai urutan database (id, nib, nama, alamat, ...)
 function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang, lat, lng, radius, jamMasuk, jamPulang) {
-    console.log('Edit Industri:', {
-        id, nib, nama, alamat, kelurahan, kecamatan, kota, provinsi, 
-        kodePos, noTelp, email, website, namaHr, noWaHr, pembimbingMagang, kategori, kapasitasMagang,
-        lat, lng, radius, jamMasuk, jamPulang
-    });
+    const modal = document.getElementById('industriModal');
+    const content = document.getElementById('industriModalContent');
     
-    document.getElementById('modalTitle').textContent = 'Edit Industri';
+    document.getElementById('modalTitle').textContent = 'Edit Data Industri';
+    const badge = document.getElementById('modalModeBadge');
+    if (badge) {
+        badge.textContent = 'Mode Edit';
+        badge.className = 'px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-amber-100 text-amber-700 tracking-wider';
+    }
     
     // Isi semua field
     document.getElementById('nib').value = nib || '';
@@ -459,11 +501,14 @@ function editIndustri(id, nib, nama, alamat, kelurahan, kecamatan, kota, provins
     const hiddenMethod = document.getElementById('industriId');
     
     hiddenMethod.value = 'PUT';
+    form.action = "{{ route('admin.data-industri.update', ':id') }}".replace(':id', id);
     
-    const actionUrl = "{{ route('admin.data-industri.update', ':id') }}".replace(':id', id);
-    form.action = actionUrl;
-    
-    document.getElementById('industriModal').classList.remove('hidden');
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
 }
 
 function getBrowserGps() {
@@ -494,7 +539,16 @@ function getBrowserGps() {
 }
 
 function closeModal() {
-    document.getElementById('industriModal').classList.add('hidden');
+    const modal = document.getElementById('industriModal');
+    const content = document.getElementById('industriModalContent');
+    if (!modal || modal.classList.contains('hidden')) return;
+    
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }, 200);
 }
 
 function deleteIndustri(id, nama) {
@@ -517,11 +571,6 @@ document.getElementById('industriForm').addEventListener('submit', function(e) {
     console.log('Form submitting...');
     console.log('Action:', this.action);
     console.log('Method:', document.getElementById('industriId').value);
-    
-    const formData = new FormData(this);
-    for (let [key, value] of formData.entries()) {
-        console.log(key, ':', value);
-    }
 });
 </script>
 @endsection

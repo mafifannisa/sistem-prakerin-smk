@@ -125,15 +125,17 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('modals')
 <!-- ================= MODALS ================= -->
 
 <!-- Modal 1: Industri Mitra -->
-<div id="modalIndustri" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-white">
-        <div class="flex items-center justify-between p-6 border-b border-gray-150">
-            <h3 class="text-lg font-bold text-gray-800">🏭 Daftar Industri Mitra</h3>
-            <button onclick="toggleModal('modalIndustri')" class="text-gray-450 hover:text-gray-650 bg-gray-100 p-1.5 rounded-full transition">✕</button>
+<div id="modalIndustri" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modalIndustriContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 border border-gray-150 flex flex-col max-h-[92vh] my-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-150 bg-gray-50/50">
+            <h3 class="text-lg font-black text-gray-800 tracking-tight">🏭 Daftar Industri Mitra</h3>
+            <button onclick="toggleModal('modalIndustri')" class="text-gray-400 hover:text-gray-650 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition">✕</button>
         </div>
         <div class="p-6 overflow-y-auto flex-1">
             <table class="w-full text-left">
@@ -161,11 +163,11 @@
 </div>
 
 <!-- Modal 2: Siswa Magang -->
-<div id="modalSiswa" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-white">
-        <div class="flex items-center justify-between p-6 border-b border-gray-150">
-            <h3 class="text-lg font-bold text-gray-800">👨‍🎓 Daftar Siswa Magang Aktif</h3>
-            <button onclick="toggleModal('modalSiswa')" class="text-gray-450 hover:text-gray-655 bg-gray-100 p-1.5 rounded-full transition">✕</button>
+<div id="modalSiswa" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modalSiswaContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 border border-gray-150 flex flex-col max-h-[92vh] my-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-150 bg-gray-50/50">
+            <h3 class="text-lg font-black text-gray-800 tracking-tight">👨‍🎓 Daftar Siswa Magang Aktif</h3>
+            <button onclick="toggleModal('modalSiswa')" class="text-gray-400 hover:text-gray-650 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition">✕</button>
         </div>
         <div class="p-6 overflow-y-auto flex-1">
             <table class="w-full text-left">
@@ -193,11 +195,11 @@
 </div>
 
 <!-- Modal 3: Laporan Final -->
-<div id="modalLaporan" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-white">
-        <div class="flex items-center justify-between p-6 border-b border-gray-150">
-            <h3 class="text-lg font-bold text-gray-800">📚 Daftar Laporan Magang Final</h3>
-            <button onclick="toggleModal('modalLaporan')" class="text-gray-455 hover:text-gray-655 bg-gray-100 p-1.5 rounded-full transition">✕</button>
+<div id="modalLaporan" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modalLaporanContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 border border-gray-150 flex flex-col max-h-[92vh] my-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-150 bg-gray-50/50">
+            <h3 class="text-lg font-black text-gray-800 tracking-tight">📚 Daftar Laporan Magang Final</h3>
+            <button onclick="toggleModal('modalLaporan')" class="text-gray-400 hover:text-gray-650 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition">✕</button>
         </div>
         <div class="p-6 overflow-y-auto flex-1">
             <div class="space-y-4">
@@ -215,7 +217,7 @@
                     <div class="flex-1 px-4 py-2 bg-gray-50 rounded-xl text-xs font-semibold text-gray-600 truncate w-full md:w-auto">
                         {{ $laporan->judul_laporan }}
                     </div>
-                    <a href="{{ Storage::url($laporan->file_path) }}" target="_blank" class="px-4 py-2 bg-orange-650 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
+                    <a href="{{ Storage::url($laporan->file_path) }}" target="_blank" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
                         📄 Buka PDF
                     </a>
                 </div>
@@ -232,7 +234,37 @@
 <script>
     function toggleModal(modalId) {
         const modal = document.getElementById(modalId);
-        modal.classList.toggle('hidden');
+        const content = document.getElementById(modalId + 'Content');
+        if (!modal) return;
+        
+        if (modal.classList.contains('hidden')) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => {
+                if (content) {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        } else {
+            if (content) {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 200);
+        }
     }
+
+    ['modalIndustri', 'modalSiswa', 'modalLaporan'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', function(e) {
+                if (e.target === this) toggleModal(id);
+            });
+        }
+    });
 </script>
 @endsection

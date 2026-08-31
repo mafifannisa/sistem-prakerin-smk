@@ -233,11 +233,13 @@
         </div>
     </div>
 </div>
+@endsection
 
-{{-- Modal Preview --}}
-<div id="previewModal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto transform scale-95 transition-all duration-200 border border-white" id="modalContainer">
-        <div class="flex items-center justify-between p-6 border-b border-gray-150 sticky top-0 bg-white/95 backdrop-blur-md z-10">
+@section('modals')
+{{-- Modal Preview (Centered & Elevated UI/UX) --}}
+<div id="previewModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 border border-gray-150 flex flex-col max-h-[92vh] my-auto" id="modalContainer">
+        <div class="flex items-center justify-between p-6 border-b border-gray-150 sticky top-0 bg-white z-10">
             <h3 class="text-lg font-bold text-gray-850">Pratinjau Pengajuan Surat</h3>
             <button onclick="closeModal()" class="text-gray-400 hover:text-gray-650 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition outline-none">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -336,19 +338,22 @@ function openModal(id, nama, jurusan, industri, posisi, tanggal) {
     const modal = document.getElementById('previewModal');
     const container = document.getElementById('modalContainer');
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
     setTimeout(() => {
-        container.classList.remove('scale-95');
-        container.classList.add('scale-100');
+        container.classList.remove('scale-95', 'opacity-0');
+        container.classList.add('scale-100', 'opacity-100');
     }, 10);
 }
 
 function closeModal() {
     const modal = document.getElementById('previewModal');
     const container = document.getElementById('modalContainer');
-    container.classList.remove('scale-100');
-    container.classList.add('scale-95');
+    if (!modal || modal.classList.contains('hidden')) return;
+    container.classList.remove('scale-100', 'opacity-100');
+    container.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
         currentPengajuanId = null;
         document.getElementById('rejectForm').classList.add('hidden');
         document.getElementById('mainButtons').classList.remove('hidden');

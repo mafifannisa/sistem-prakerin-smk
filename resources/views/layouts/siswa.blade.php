@@ -627,6 +627,23 @@
             }
         });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[id$="Modal"], [id^="modal-"], [id^="modal_"], .modal-container').forEach(function(el) {
+                if (el.parentElement !== document.body && !el.closest('#sidebar') && el.id !== 'sidebarOverlay') {
+                    document.body.appendChild(el);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (typeof closeModal === 'function') closeModal();
+                if (typeof closeProfilModal === 'function') closeProfilModal();
+            }
+        });
     </script>
+    @yield('modals')
+    @stack('modals')
+    @stack('scripts')
 </body>
 </html>

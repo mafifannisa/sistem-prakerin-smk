@@ -7,7 +7,7 @@
 
 @section('header_actions')
 <div class="flex justify-end">
-    <button onclick="document.getElementById('modal-tambah').classList.remove('hidden')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+    <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Tambah Surat Masuk
     </button>
@@ -76,76 +76,118 @@
         @endif
     </div>
 </div>
+@endsection
 
-<!-- Modal Tambah -->
-<div id="modal-tambah" class="fixed inset-0 z-50 hidden bg-gray-900/50 backdrop-blur-sm overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-        <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-xl w-full">
-            <div class="bg-white px-8 pt-6 pb-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">Input Surat Masuk (Balasan)</h3>
-                    <button onclick="document.getElementById('modal-tambah').classList.add('hidden')" class="text-gray-400 hover:text-gray-500">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
+@section('modals')
+<!-- Modal Tambah Surat Masuk (Centered & Elevated UI/UX) -->
+<div id="modal-tambah" class="fixed inset-0 z-[100] hidden bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modalTambahContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0 border border-gray-100 flex flex-col max-h-[92vh] my-auto">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800 tracking-tight">Input Surat Masuk (Balasan)</h3>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Catat respon dan surat resmi dari pihak DU/DI</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 rounded-full transition border border-gray-200/60 shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <form action="{{ route('admin.surat-masuk.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden m-0">
+            @csrf
+            <div class="p-6 overflow-y-auto space-y-4 flex-1 text-sm">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Pengajuan Siswa <span class="text-red-500">*</span></label>
+                    <select name="penempatan_magang_id" required class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs font-semibold text-gray-800 transition">
+                        <option value="">-- Pilih Siswa & Industri --</option>
+                        @foreach($penempatans as $p)
+                            <option value="{{ $p->id }}">{{ $p->siswa->nama ?? '-' }} - {{ $p->industri->nama_industri ?? '-' }} ({{ $p->status }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nomor Surat <span class="text-red-500">*</span></label>
+                        <input type="text" name="nomor_surat" required placeholder="Contoh: 123/DU-DI/2024" class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Pengirim (Dari Industri) <span class="text-red-500">*</span></label>
+                        <input type="text" name="pengirim" required placeholder="Nama PT / Instansi" class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal Terima <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal_terima" required value="{{ date('Y-m-d') }}" class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Perihal <span class="text-red-500">*</span></label>
+                        <input type="text" name="perihal" required placeholder="Contoh: Penerimaan PKL" class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                    </div>
                 </div>
                 
-                <form action="{{ route('admin.surat-masuk.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Pilih Pengajuan Siswa</label>
-                        <select name="penempatan_magang_id" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                            <option value="">-- Pilih Siswa & Industri --</option>
-                            @foreach($penempatans as $p)
-                                <option value="{{ $p->id }}">{{ $p->siswa->nama ?? '-' }} - {{ $p->industri->nama_industri ?? '-' }} ({{ $p->status }})</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Keputusan Industri <span class="text-red-500">*</span></label>
+                    <select name="status_balasan" required class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs font-bold text-gray-800 transition">
+                        <option value="terima">Diterima</option>
+                        <option value="tolak">Ditolak</option>
+                        <option value="diproses">Dalam Proses</option>
+                    </select>
+                    <p class="text-[11px] text-gray-500 mt-1">Status pengajuan siswa akan otomatis diperbarui sesuai opsi ini.</p>
+                </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Nomor Surat</label>
-                            <input type="text" name="nomor_surat" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Pengirim (Dari Industri)</label>
-                            <input type="text" name="pengirim" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Tanggal Terima</label>
-                            <input type="date" name="tanggal_terima" required value="{{ date('Y-m-d') }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Perihal</label>
-                            <input type="text" name="perihal" required placeholder="Contoh: Penerimaan PKL" class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Keputusan Industri</label>
-                        <select name="status_balasan" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                            <option value="terima">Diterima</option>
-                            <option value="tolak">Ditolak</option>
-                            <option value="diproses">Dalam Proses</option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Status pengajuan siswa akan otomatis berubah berdasarkan pilihan ini.</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Scan Surat (Opsional)</label>
-                        <input type="file" name="file_surat" accept=".pdf,.jpg,.jpeg,.png" class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                        <p class="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG (Max 2MB)</p>
-                    </div>
-
-                    <div class="pt-4 flex justify-end gap-3">
-                        <button type="button" onclick="document.getElementById('modal-tambah').classList.add('hidden')" class="px-5 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition">Simpan Surat</button>
-                    </div>
-                </form>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Upload Berkas Scan Surat</label>
+                    <input type="file" name="file_surat" accept=".pdf,.jpg,.jpeg,.png" class="w-full px-3.5 py-2 bg-gray-50/50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-xs file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    <p class="text-[10px] text-gray-400 mt-1">Format: PDF, JPG, PNG (Maks 2MB)</p>
+                </div>
             </div>
-        </div>
+
+            <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModal()" class="px-5 py-2.5 bg-white border border-gray-250 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition shadow-sm">
+                    Batal
+                </button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Simpan Surat
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+function openModal() {
+    const modal = document.getElementById('modal-tambah');
+    const content = document.getElementById('modalTambahContent');
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('modal-tambah');
+    const content = document.getElementById('modalTambahContent');
+    if (!modal || modal.classList.contains('hidden')) return;
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }, 200);
+}
+
+document.getElementById('modal-tambah').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
 @endsection

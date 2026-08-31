@@ -148,70 +148,88 @@
         @endif
     </div>
 </div>
+@endsection
 
-<!-- Modal Tambah/Edit Jurusan -->
-<div id="jurusanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Tambah Jurusan</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+@section('modals')
+<!-- Modal Tambah/Edit Jurusan (Centered & Elevated UI/UX) -->
+<div id="jurusanModal" class="fixed inset-0 z-[100] hidden bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div id="jurusanModalContent" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0 border border-gray-100 flex flex-col max-h-[92vh] my-auto">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 id="modalTitle" class="text-lg font-black text-gray-800 tracking-tight">Tambah Jurusan Baru</h3>
+                        <span id="modalModeBadge" class="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-blue-100 text-blue-700 tracking-wider">Baru</span>
+                    </div>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Kelola kompetensi keahlian dan kepemimpinan jurusan</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 rounded-full transition border border-gray-200/60 shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
         
-        <form id="jurusanForm" method="POST" class="p-6">
+        <form id="jurusanForm" method="POST" class="flex flex-col flex-1 overflow-hidden m-0">
             @csrf
             <input type="hidden" id="jurusanId" name="_method" value="POST">
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Jurusan *</label>
-                    <input type="text" name="kode_jurusan" id="kode_jurusan" required 
-                           placeholder="Contoh: RPL, TKJ, TPM"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="p-6 overflow-y-auto space-y-4 flex-1 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Kode Jurusan <span class="text-red-500">*</span></label>
+                        <input type="text" name="kode_jurusan" id="kode_jurusan" required 
+                               placeholder="Contoh: RPL, TKJ, TPM"
+                               class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold uppercase transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Kepala Jurusan</label>
+                        <input type="text" name="kepala_jurusan" id="kepala_jurusan" 
+                               placeholder="Nama kepala jurusan"
+                               class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition">
+                    </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Jurusan *</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Jurusan <span class="text-red-500">*</span></label>
                     <input type="text" name="nama_jurusan" id="nama_jurusan" required 
                            placeholder="Contoh: Rekayasa Perangkat Lunak"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold transition">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kepala Jurusan</label>
-                    <input type="text" name="kepala_jurusan" id="kepala_jurusan" 
-                           placeholder="Nama kepala jurusan"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Deskripsi</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Deskripsi</label>
                     <textarea name="deskripsi" id="deskripsi" rows="3" 
-                              placeholder="Deskripsi jurusan..."
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                              placeholder="Deskripsi singkat jurusan..."
+                              class="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-250 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition"></textarea>
                 </div>
                 
-                <div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_active" id="is_active" value="1"
-                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="text-sm font-semibold text-gray-700">Aktif</span>
+                <div class="p-3 bg-gray-50/80 rounded-xl border border-gray-150 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-gray-800 block">Status Aktif Jurusan</span>
+                        <p class="text-[11px] text-gray-500">Jurusan aktif dapat dipilih pada form siswa & guru</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="is_active" value="1" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-250 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
-                    <p class="text-xs text-gray-500 mt-1">Centang jika jurusan aktif digunakan</p>
                 </div>
             </div>
             
-            <div class="flex items-center justify-end gap-3 mt-6">
+            <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
                 <button type="button" onclick="closeModal()" 
-                        class="px-6 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+                        class="px-5 py-2.5 bg-white border border-gray-250 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition shadow-sm">
                     Batal
                 </button>
                 <button type="submit" 
-                        class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition">
-                    Simpan
+                        class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Simpan Data Jurusan
                 </button>
             </div>
         </form>
@@ -220,15 +238,39 @@
 
 <script>
 function openModal() {
-    document.getElementById('modalTitle').textContent = 'Tambah Jurusan';
+    const modal = document.getElementById('jurusanModal');
+    const content = document.getElementById('jurusanModalContent');
+    
+    document.getElementById('modalTitle').textContent = 'Tambah Jurusan Baru';
+    const badge = document.getElementById('modalModeBadge');
+    if (badge) {
+        badge.textContent = 'Baru';
+        badge.className = 'px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-blue-100 text-blue-700 tracking-wider';
+    }
+    
     document.getElementById('jurusanForm').reset();
+    document.getElementById('is_active').checked = true;
     document.getElementById('jurusanId').value = 'POST';
     document.getElementById('jurusanForm').action = "{{ route('admin.data-jurusan') }}";
-    document.getElementById('jurusanModal').classList.remove('hidden');
+    
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
 }
 
 function editJurusan(id, kode, nama, kepalaJurusan, deskripsi, isActive) {
-    document.getElementById('modalTitle').textContent = 'Edit Jurusan';
+    const modal = document.getElementById('jurusanModal');
+    const content = document.getElementById('jurusanModalContent');
+    
+    document.getElementById('modalTitle').textContent = 'Edit Data Jurusan';
+    const badge = document.getElementById('modalModeBadge');
+    if (badge) {
+        badge.textContent = 'Mode Edit';
+        badge.className = 'px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-amber-100 text-amber-700 tracking-wider';
+    }
     
     document.getElementById('kode_jurusan').value = kode;
     document.getElementById('nama_jurusan').value = nama;
@@ -239,11 +281,25 @@ function editJurusan(id, kode, nama, kepalaJurusan, deskripsi, isActive) {
     document.getElementById('jurusanId').value = 'PUT';
     document.getElementById('jurusanForm').action = "{{ route('admin.data-jurusan.update', ':id') }}".replace(':id', id);
     
-    document.getElementById('jurusanModal').classList.remove('hidden');
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
 }
 
 function closeModal() {
-    document.getElementById('jurusanModal').classList.add('hidden');
+    const modal = document.getElementById('jurusanModal');
+    const content = document.getElementById('jurusanModalContent');
+    if (!modal || modal.classList.contains('hidden')) return;
+    
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }, 200);
 }
 
 function deleteJurusan(id, nama) {
